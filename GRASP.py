@@ -1,4 +1,41 @@
 from manim import *
+import random
+
+problem = {
+    "DOTS_mobject": [],
+    "DOTS_coord": [],
+    "DOTS_visited": [],
+    "EDGES": [],
+    "EDGES_mobject": []
+}
+
+LAST_VISITED_COLOR = RED
+VISITED_COLOR = GREY
+DEFAULT_COLOR = WHITE
+
+def build_problem(self):
+    random.seed(2)
+
+    N_POINTS = 20
+
+    for _ in range(N_POINTS):
+        x,y = random.uniform(-7, 7), random.uniform(-3, 3)
+
+        problem["DOTS_mobject"].append(Dot(point=[x, y, 0.0], color=DEFAULT_COLOR))
+        problem["DOTS_coord"].append((x,y))
+
+
+def display_problem(self):
+    self.play(
+        LaggedStart(
+            *[  
+                Create(p) for p in problem["DOTS_mobject"]
+            ],
+            lag_ratio = 0.1
+        )
+    )
+
+    self.wait()
 
 def explain_code_grasp(self):
     image = show_code_grasp(self)
@@ -47,6 +84,9 @@ class ExplainConstructionOfCandidateList(Scene):
         self.wait()
 
         # TODO: Introduce the problem to solve
+        build_problem(self)
+        display_problem(self)
+        self.wait()
 
         # TODO: Show the general code for construction
 
