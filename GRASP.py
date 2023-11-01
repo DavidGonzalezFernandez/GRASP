@@ -31,14 +31,12 @@ def display_problem(self):
     # Create the Dots
     self.play(
         LaggedStart(
-            *[  
-                Create(p) for p in problem["DOTS_mobject"]
-            ],
+            *[Create(p) for p in problem["DOTS_mobject"]],
+            *[Create(l) for l in problem["EDGES_mobject"]],
             lag_ratio = 0.1
         )
     )
 
-    # TODO: create the edges
     self.wait()
 
 
@@ -69,16 +67,15 @@ def explain_code_grasp(self):
     self.wait()
 
     # Remove image and rectangle
-    self.remove(image, rectangle_while)
+    self.play(FadeOut(image), FadeOut(rectangle_while))
 
 
 """Shows the code for GRASP"""
 def show_code_grasp(self):
     DOWN_SHIFT = 0
-    image = ImageMobject("GRASP_code_snippet_v3.png").shift(DOWN_SHIFT * DOWN)
+    image = ImageMobject("my_media//GRASP_code_snippet_v3.png").shift(DOWN_SHIFT * DOWN)
 
-    # TODO: do it more gently
-    self.add(image)
+    self.play(FadeIn(image))
 
     self.wait()
 
@@ -126,6 +123,7 @@ def explain_alpha(self):
     get_lambda_text = lambda : Text(f"{(alpha.get_value()):.2f}").scale(1/2)
     # Text displaying the value of alpha
     alpha_text = get_lambda_text()
+    alpha_text.next_to(dot, DOWN)
 
     for (i,d) in DISTANCES.items():
         # Update the colors of the points if they can be included in RCL
@@ -133,7 +131,7 @@ def explain_alpha(self):
             x.set_color(DEFAULT_COLOR if (DISTANCES[i] > (MIN_C+alpha.get_value()*(MAX_C-MIN_C))) else RCL_COLOR)
         problem["DOTS_mobject"][i].add_updater(the_updater)
 
-    def update_lambda(z):
+    def update_lambda_text(z):
         z.become(get_lambda_text())
         z.next_to(dot, DOWN)
 
@@ -143,7 +141,7 @@ def explain_alpha(self):
     
     text.add_updater(lambda z: z.become(get_text()))
     dot.add_updater(lambda z : z.become(get_dot()))
-    alpha_text.add_updater(update_lambda)
+    alpha_text.add_updater(update_lambda_text)
 
     # From center to MAX
     self.play(alpha.animate.set_value(MAX_ALPHA), run_time=2)
@@ -170,6 +168,7 @@ def explain_alpha(self):
 
     self.wait()
 
+
 """Calculates the distance from the last visited point to all non-visited points"""
 def get_distances():
     last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
@@ -190,6 +189,7 @@ def get_restricted_candidate_list(distances, alpha):
         for (i,distance) in distances.items()
         if distance>=min_distance  and  distance<=(min_distance + alpha*(max_distance-min_distance))
     }
+
 
 """Shows the greedy-randomized construction of a solution"""
 def construct_initial_solution(self):
@@ -237,36 +237,47 @@ def construct_initial_solution(self):
             Create(line)
         )
 
-
         problem["EDGES_mobject"].append(line)
-        line.clear_updaters()
         problem["DOTS_visited"].append(index)
 
-        # TODO: do I have to return to point[0]?
+    # Go back to initial position
+    last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
+    new_x, new_y = problem["DOTS_coord"][ problem["DOTS_visited"][0] ]
+    line = Line([last_x, last_y, 0], [new_x, new_y, 0])
+    self.play(
+        FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_COLOR),
+        Create(line)
+    )
+    problem["EDGES_mobject"].append(line)
 
     self.wait()
 
 
 
-class ExplainConstructionOfCandidateList(Scene):
+class GRASP(Scene):
     def construct(self):
         # TODO: Show the name and meaning
 
-        # TODO: Show the general code for GRASP
-        show_code_grasp(self)
+        # Show the general code for GRASP
+        explain_code_grasp(self)
         self.wait()
 
-        # TODO: Introduce the problem to solve
+        # Introduce the problem to solve
         build_problem(self)
         display_problem(self)
         self.wait()
 
-        # TODO: Show the general code for construction
+        # Show the general code for construction
+        # TODO: Show the general code and focus on construction
         construct_initial_solution(self)
 
         # TODO: Show the idea behind repair
+        # Show the general code and focus on repair
 
         # TODO: Show local search
+        # Show the general code and focus on local search
+
+        # TODO: redo explanation of code
 
         # TODO: Show results and modifications of parameters
 
