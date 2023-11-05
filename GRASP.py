@@ -8,7 +8,8 @@ problem = {
     "DOTS_coord": [],
     "DOTS_visited": [],
     "EDGES": [],
-    "EDGES_mobject": []
+    "EDGES_mobject": [],
+    "DISTANCES_mobjects": []
 }
 
 
@@ -29,7 +30,11 @@ def build_problem(self):
 
 
 """Animation to draw the problem on the screen"""
-def display_problem(self):
+def display_problem(self, title=None):
+    # Remove the title
+    if title is not None:
+        self.play(FadeOut(title))
+
     # Create the Dots
     self.play(
         LaggedStart(
@@ -131,20 +136,119 @@ def show_code_grasp(self, additional_mobjects=[]):
     return image, rect
 
 
-""""""
-# TODO: implement
-def explain_restricted_candidate_list(self):
+def explain_p(self):
+    DISTANCES = get_distances()
+    MIN_P, MAX_P = 1, len(DISTANCES.values())
+    MIN_C, MAX_C = min(DISTANCES.values()), max(DISTANCES.values())
 
-    # Explain different ways of filterin
-    #text1 = Text(r"[c_min, c_min + α * (c_max - c_min)]")
+    p = ValueTracker(5)
+
+    box = Rectangle(width=4, height=5, fill_color=BLACK, fill_opacity=1).move_to([-5, 1, 0])
+
+    # Order the costs
+    next_to_mobjects = {
+        dot: i
+        for (i,dot) in enumerate(problem["DOTS_mobject"])
+        if i not in problem["DOTS_visited"]
+    }
+
+    for (i,key) in enumerate(next_to_mobjects.keys()):
+        next_to_mobjects[key] = problem["DISTANCES_mobjects"][i]
+
+    dist_text = {
+        distance: problem["DISTANCES_mobjects"][i]
+        for (i,distance) in enumerate(DISTANCES.values())
+    }
+
+    SHIFT_DOWN = 0.25 * DOWN
+    ORIGINAL_POSITION = LEFT*5 + UP*3.25
+
+    for t in problem["DISTANCES_mobjects"]:
+        t.set_z_index(box.z_index + 2)
+
+    x_start_line, x_end_line = LEFT*5.5, LEFT*4.5
+    get_line = lambda : Line(
+        x_start_line + UP*3.25 + SHIFT_DOWN*int(p.get_value()) - SHIFT_DOWN*0.5,
+        x_end_line + UP*3.25 + SHIFT_DOWN*int(p.get_value()) - SHIFT_DOWN*0.5,
+        z_index = box.z_index + 1
+    )
+    line = get_line()
+
+    get_text = lambda : Text(f"{int(p.get_value())}").scale(1/3).next_to(line, RIGHT)
+    text = get_text()
+
+    self.play(
+        FadeIn(box),
+        *[
+            dist_text[distance].animate.move_to(ORIGINAL_POSITION + SHIFT_DOWN*i).scale(3/4)
+            for (i,distance) in enumerate(sorted(dist_text.keys()))
+        ]
+    )
+
+    self.wait()
+
+    self.play(
+        Create(line),
+        Create(text)
+    )
+
+    def line_updater(line):
+        line.become(get_line())
+        text.become(get_text())
+
+    for (i,dist) in DISTANCES.items():
+        def the_updater(x, dist=dist):
+            x.set_color(DEFAULT_COLOR if (sorted(DISTANCES.values()).index(dist)+1 > int(p.get_value())) else RCL_COLOR)
+        problem["DOTS_mobject"][i].add_updater(the_updater)
+    
+    line.add_updater(line_updater)
+    text.add_updater(lambda z: z.become(get_text()))
+
+    self.wait()
+
+    # TODO: show different values of p
+    # To min
+    self.play(p.animate.set_value(MIN_P), run_time=2)
+    self.wait()
+
+    # To max
+    self.play(p.animate.set_value(MAX_P), run_time=2)
+    self.wait()
+
+    # To medium
+    self.play(p.animate.set_value((MAX_P+MIN_P)*0.5), run_time=2)
+    self.wait()
+
+    line.clear_updaters()
+    text.clear_updaters()
+
+    # Return distantes to original position
+    self.play(
+        *[distance.animate.next_to(dot, RIGHT).scale(4/3) for (dot,distance) in next_to_mobjects.items()],
+        FadeOut(line),
+        FadeOut(text)
+    )
+
+    # TODO Remove objects
+
+    return box
+
+"""Explains how to create the RCL"""
+def explain_restricted_candidate_list(self):
+    # Explain p
+    box = explain_p(self)
+    self.wait()
 
     # Explain alpha
-    explain_alpha(self)
+    explain_alpha(self, box)
 
 
 """Tries all alpha posible combinations to explain how its value affects the
 behaviour of the greedy-randomized approach"""
-def explain_alpha(self):
+def explain_alpha(self, box):
+    # TODO: add formula
+    #text1 = Text(r"[c_min, c_min + α * (c_max - c_min)]")
+
     MIN_ALPHA, MAX_ALPHA = 0, 1
     DISTANCES = get_distances()
     MIN_C, MAX_C = min(DISTANCES.values()), max(DISTANCES.values())
@@ -153,8 +257,7 @@ def explain_alpha(self):
     alpha = ValueTracker(0.5)
 
     # Rectangle to used as a box containing all the info
-    box = Rectangle(width=4, height=3)
-    box.move_to([-5, 2, 0])
+    new_box = Rectangle(width=4, height=3, fill_color=BLACK, fill_opacity=1).move_to([-5, 2, 0])
 
     get_text = lambda : Text(f"[{MIN_C:.2f}, {(MIN_C+alpha.get_value()*(MAX_C-MIN_C)):.2f}]").shift(5*LEFT+2.5*UP).scale(1/2)
     # The text showing the MIN and MAX values allowed within the range
@@ -173,9 +276,10 @@ def explain_alpha(self):
     alpha_text = get_lambda_text()
 
     # All the objects to be displayed
-    objects = [box, range_text, alpha_text, line, dot]
+    objects = [range_text, alpha_text, line, dot]
     self.play(
         *[FadeIn(o) for o in objects],
+        box.animate.become(new_box),
         *[
             FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR)
             for i in DISTANCES.keys()
@@ -220,7 +324,9 @@ def explain_alpha(self):
     # Restore view to match previous
     self.play(
         *[FadeOut(o) for o in objects],
-        *[FadeToColor(problem["DOTS_mobject"][i], color=DEFAULT_COLOR) for i in DISTANCES.keys()]
+        #*[FadeToColor(problem["DOTS_mobject"][i], color=DEFAULT_COLOR) for i in DISTANCES.keys()],
+        FadeOut(box),
+        FadeOut(new_box)
     )
 
     self.wait()
@@ -277,10 +383,6 @@ def construct_initial_solution(self):
     )
     self.wait()
 
-    # Pause to explain the RCL
-    # TODO uncomment
-    #explain_restricted_candidate_list(self)
-
     NUM_STEP_BY_STEP = 2
 
     # Repeat until all points have been visited
@@ -306,24 +408,37 @@ def construct_initial_solution(self):
                 for (i,dot) in enumerate(problem["DOTS_mobject"])
                 if i not in problem["DOTS_visited"]
             ]
+            problem["DISTANCES_mobjects"].extend(distances_text)
             self.play(
                 arrow.animate.move_to(pos_costs),
                 *[FadeIn(t) for t in distances_text]
             )
             self.wait()
 
+        if len(problem["DOTS_visited"]) == 1:
+            self.play(
+                arrow.animate.move_to(pos_RCL),
+            )
+            self.wait()
+            # Pause to explain the RCL
+            explain_restricted_candidate_list(self)
+
         # Filter out the worst ones
         restricted_candidate_list = get_restricted_candidate_list(distances, alpha)
 
         # Animation to show restricted candidate_list
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
-            the_dots = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i not in restricted_candidate_list.keys()]
+            the_dots_1 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i not in restricted_candidate_list.keys()]
+            the_dots_2 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i in restricted_candidate_list.keys()]
             self.play(
-                *[FadeToColor(d, color=DEFAULT_COLOR) for d in the_dots],
+                *[FadeToColor(d, color=DEFAULT_COLOR) for d in the_dots_1],
+                *[FadeToColor(d, color=RCL_COLOR) for d in the_dots_2],
                 arrow.animate.move_to(pos_RCL),
                 *[FadeOut(t) for t in distances_text]
             )
             self.wait()
+        
+        problem["DISTANCES_mobjects"].clear()
 
         # Choose next point randomly
         index = random.choice(list(restricted_candidate_list.keys()))
@@ -390,21 +505,26 @@ def show_introduction(self):
     self.wait()
 
 
+def introduce_problem(self):
+    title = Text("Problema del viajante")
+    self.play(Create(title))
+    return title
 
 
 class GRASP(Scene):
     def construct(self):
         # TODO: Show the name and meaning
-        #show_introduction(self)
+        show_introduction(self)
 
         # Show the general code for GRASP
-        #explain_code_grasp(self)
+        explain_code_grasp(self)
         self.wait()
 
         # Introduce the problem to solve
-        # TODO: show problem's title
         build_problem(self)
-        display_problem(self)
+        title = introduce_problem(self)
+        self.wait()
+        display_problem(self, title)
         self.wait()
 
         # Show the general code and the code for construction
@@ -413,12 +533,12 @@ class GRASP(Scene):
         construct_initial_solution(self)
 
         # Show the general code and focus on repair
-        #show_code_grasp_focus_feasible(self)
+        show_code_grasp_focus_feasible(self)
         # TODO: Show the idea behind repair
         # TODO: Visualize repair
 
         # Show the general code and focus on local search
-        #show_code_grasp_focus_search(self)
+        show_code_grasp_focus_search(self)
         # TODO: Show the code for local search
         # TODO: Visualize local search
 
