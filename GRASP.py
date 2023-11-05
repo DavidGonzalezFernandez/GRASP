@@ -206,7 +206,6 @@ def explain_p(self):
 
     self.wait()
 
-    # TODO: show different values of p
     # To min
     self.play(p.animate.set_value(MIN_P), run_time=2)
     self.wait()
@@ -228,8 +227,6 @@ def explain_p(self):
         FadeOut(line),
         FadeOut(text)
     )
-
-    # TODO Remove objects
 
     return box
 
@@ -513,7 +510,7 @@ def introduce_problem(self):
 
 class GRASP(Scene):
     def construct(self):
-        # TODO: Show the name and meaning
+        # Show the name and meaning
         show_introduction(self)
 
         # Show the general code for GRASP
