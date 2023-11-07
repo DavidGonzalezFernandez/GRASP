@@ -122,7 +122,7 @@ def explain_code_grasp(self):
 def show_code_grasp(self, additional_mobjects=[]):
     rect = get_huge_black_rectangle()
     DOWN_SHIFT = 0
-    image = ImageMobject("my_media//GRASP_code_snippet_v3.png").shift(DOWN_SHIFT * DOWN)
+    image = ImageMobject("my_media//GRASP_code_snippet_v4.png").shift(DOWN_SHIFT * DOWN)
 
     self.play(
         FadeIn(rect),
@@ -187,9 +187,14 @@ def explain_p(self):
 
     self.wait()
 
+    the_dots_1 = [problem["DOTS_mobject"][i] for (i,dist) in DISTANCES.items() if sorted(DISTANCES.values()).index(dist)+1 > int(p.get_value())]
+    the_dots_2 = [problem["DOTS_mobject"][i] for (i,dist) in DISTANCES.items() if sorted(DISTANCES.values()).index(dist)+1 <=  int(p.get_value())]
+
     self.play(
         Create(line),
-        Create(text)
+        Create(text),
+        *[FadeToColor(d, DEFAULT_COLOR) for d in the_dots_1],
+        *[FadeToColor(d, RCL_COLOR) for d in the_dots_2]
     )
 
     def line_updater(line):
@@ -353,7 +358,7 @@ def get_restricted_candidate_list(distances, alpha):
 
 """Shows the greedy-randomized construction of a solution"""
 def construct_initial_solution(self):
-    alpha = 0.25
+    alpha = 0.2
 
     random.seed(0)
 
@@ -369,7 +374,7 @@ def construct_initial_solution(self):
     pos_random = LEFT*6.6 + UP*1.65
     pos_append = LEFT*6.6 + UP*1.5
     pos_get_cand_2 = LEFT*6.6 + UP*1.355
-    pos_return = LEFT*6.6 + UP*1.09
+    pos_return = LEFT*6.6 + UP*1.08
 
     arrow = Arrow(start=pos_solution, end=pos_solution+RIGHT).scale(1/2).move_to(pos_solution)
 
@@ -419,6 +424,7 @@ def construct_initial_solution(self):
             self.wait()
             # Pause to explain the RCL
             explain_restricted_candidate_list(self)
+            # TODO re-color all the dots in candidate list
 
         # Filter out the worst ones
         restricted_candidate_list = get_restricted_candidate_list(distances, alpha)
@@ -456,7 +462,7 @@ def construct_initial_solution(self):
                 FadeToColor(problem["DOTS_mobject"][index], color=LAST_VISITED_COLOR),
                 Create(line),
                 arrow.animate.move_to(pos_append),
-                run_time = 1 if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP else 0.5
+                run_time = 1
             )
             self.wait()
         else:
@@ -464,7 +470,7 @@ def construct_initial_solution(self):
                 FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_COLOR),
                 FadeToColor(problem["DOTS_mobject"][index], color=LAST_VISITED_COLOR),
                 Create(line),
-                run_time = 1 if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP else 0.5
+                run_time = 1/3
             )
 
         problem["EDGES_mobject"].append(line)
@@ -488,17 +494,19 @@ def construct_initial_solution(self):
 
 """Shows the title to do the introduction"""
 def show_introduction(self):
-    title_whole_name = Paragraph("Greedy", "Randomized", "Adaptive", "Search", "Procedure")
-    self.add(title_whole_name)
+    group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/5).shift(DOWN*3)
+
+    title_whole_name = Paragraph("Greedy", "Randomized", "Adaptive", "Search", "Procedure").shift(UP*0.5)
+    self.add(title_whole_name, group_name)
     self.wait()
 
-    title_GRASP = Text("GRASP")
+    title_GRASP = Text("GRASP").shift(UP*0.5)
     self.play(ReplacementTransform(title_whole_name, title_GRASP))
     self.wait()
 
     # TODO: pensar qué más poner
 
-    self.play(FadeOut(title_GRASP))
+    self.play(FadeOut(title_GRASP), FadeOut(group_name))
     self.wait()
 
 
@@ -511,7 +519,10 @@ def introduce_problem(self):
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
+        # FIXME: uncomment
         show_introduction(self)
+
+        # TODO: explain what problems it can be used for
 
         # Show the general code for GRASP
         explain_code_grasp(self)
@@ -519,12 +530,15 @@ class GRASP(Scene):
 
         # Introduce the problem to solve
         build_problem(self)
+        # FIXME: uncomment
         title = introduce_problem(self)
+        # TODO: explain how to solve the problem (brute force and other ways)
         self.wait()
         display_problem(self, title)
         self.wait()
 
         # Show the general code and the code for construction
+        # FIXME: uncomment
         code_img = show_code_grasp_focus_construct(self)
         # Visualize construction
         construct_initial_solution(self)
@@ -532,15 +546,23 @@ class GRASP(Scene):
         # Show the general code and focus on repair
         show_code_grasp_focus_feasible(self)
         # TODO: Show the idea behind repair
+        # TODO: explain reason behind it
         # TODO: Visualize repair
 
         # Show the general code and focus on local search
         show_code_grasp_focus_search(self)
         # TODO: Show the code for local search
         # TODO: Visualize local search
+        # TODO: differenciate between best and first
+        # TODO: explain what the neighborhood is
 
         # TODO: Redo explanation of code
 
-        # TODO: Show results and modifications of parameters
+        # TODO: Show how parameters affect the found solution, exploration space, execution time
+        # TODO: pending: order-vs-value, alpha value, p value, first-vs-best
+        # TODO: Explain best choice of parameters
 
-        # TODO: Show extensions and improvements
+        # TODO: Show extensions and improvements to the algorithm
+
+        # TODO: End of video
+        # TODO: Add references
