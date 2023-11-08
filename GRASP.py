@@ -54,17 +54,30 @@ get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.4).move
 get_rectangle_whole_if_feasible = lambda : Rectangle(height=LINE_HEIGHT*2 - 0.1, width=5.45).move_to(0.175*DOWN + 1.15*LEFT)
 get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.8*DOWN + 0.95*LEFT)
 
-def show_code_grasp_focus(self, rect, then=None):
+def show_code_grasp_focus(self, rect, initial=None, then=None):
+    # Show the code
     img, huge_rect = show_code_grasp(self, rect)
     self.wait()
     if then is None:
-        self.play(FadeOut(huge_rect), FadeOut(img), FadeOut(rect))
+        # Remove the code and others
+        self.play(
+            FadeOut(huge_rect), 
+            FadeOut(img), 
+            FadeOut(rect)
+        )
     else:
-        self.play(FadeOut(img), FadeOut(rect), FadeIn(then))
+        # Change code to other image
+        self.play(
+            FadeOut(img), 
+            FadeOut(rect), 
+            FadeIn(initial)
+        )
+
         self.wait()
+        # Transform image into another (to scale and change position)
         self.play(
             FadeOut(huge_rect),
-            then.animate.scale(1/2).shift(UP*2 + LEFT*5)
+            initial.animate.become(then)
         )
     self.wait()
     return then
@@ -73,18 +86,24 @@ def show_code_grasp_focus_construct(s):
     img = show_code_grasp_focus(
         s,
         get_rectangle_construct(),
-        ImageMobject("my_media//construction_code_snippet_v2.png")
+        ImageMobject("my_media//construction_code_snippet_v2.png"),
+        ImageMobject("my_media//construction_code_snippet_v2.png").scale(1/2).shift(UP*2 + LEFT*5)
     )
     return img
+
+def show_code_grasp_focus_search(s):
+    img = show_code_grasp_focus(
+        s,
+        get_rectangle_local_search(),
+        ImageMobject("my_media//search_code_snippet_v3.png"),
+        ImageMobject("my_media//search_code_snippet_v3.png").scale(1/2).shift(UP*2 + LEFT*5)
+    )
+    return img
+
 
 show_code_grasp_focus_feasible = lambda s : show_code_grasp_focus(
     s,
     get_rectangle_whole_if_feasible(),
-    None
-)
-show_code_grasp_focus_search = lambda s : show_code_grasp_focus(
-    s, 
-    get_rectangle_local_search(), 
     None
 )
 
@@ -220,7 +239,7 @@ def explain_p(self):
     self.wait()
 
     # To medium
-    self.play(p.animate.set_value((MAX_P+MIN_P)*0.5), run_time=2)
+    self.play(p.animate.set_value(5), run_time=2)
     self.wait()
 
     line.clear_updaters()
@@ -510,38 +529,93 @@ def show_introduction(self):
     self.wait()
 
 
+def get_total_cost(order):
+    res = 0
+
+    for i in range(len(order)):
+        if i+1 < len(order):
+            coord_start, coord_end = problem["DOTS_coord"][order[i]], problem["DOTS_coord"][order[i+1]]
+            prev = res
+            res += (abs(coord_start[0] - coord_end[0])**2 + abs(coord_start[1] - coord_end[1])**2)**(1/2)
+            assert res >= 0
+            assert res >= prev
+
+        else:
+            assert problem["DOTS_coord"][order[i]] == problem["DOTS_coord"][order[-1]]
+
+            res += (
+                abs(problem["DOTS_coord"][order[i]][0] - problem["DOTS_coord"][order[0]][0])**2 + 
+                abs(problem["DOTS_coord"][order[i]][1] - problem["DOTS_coord"][order[0]][1])**2
+            )**(1/2)
+
+            assert res >= 0
+            assert res >= prev
+
+    return res
+
+
 def introduce_problem(self):
     title = Text("Problema del viajante")
     self.play(Create(title))
     return title
 
 
+
+def do_local_search(self):
+    is_optimal = False
+    
+    solution = problem["DOTS_visited"].copy()
+    solution_cost = get_total_cost(solution)
+
+    # Main loop while current solution is not yet optimal
+    while not is_optimal:
+        is_optimal = True
+
+        # TODO: define and show what the neighborhood is (permutations of adjacent nodes)
+        
+        # TODO: calculate all the permutations
+
+        # TODO: iterate over permutations 
+
+        # TODO: show animation changing from current to new
+
+        # TODO: compare solutions
+
+        # TODO: return to prev state
+
+        # TODO: show the best_one of all
+
+    pass
+
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
         # FIXME: uncomment
-        show_introduction(self)
+        #show_introduction(self)
 
         # TODO: explain what problems it can be used for
 
         # Show the general code for GRASP
-        explain_code_grasp(self)
+        # FIXME: uncomment
+        #explain_code_grasp(self)
         self.wait()
 
         # Introduce the problem to solve
         build_problem(self)
         # FIXME: uncomment
-        title = introduce_problem(self)
-        # TODO: explain how to solve the problem (brute force and other ways)
+        #title = introduce_problem(self)
         self.wait()
+        # TODO: explain how to solve the problem (brute force and other ways)
+        # Draw the built problem on the screen
         display_problem(self, title)
         self.wait()
 
         # Show the general code and the code for construction
         # FIXME: uncomment
-        code_img = show_code_grasp_focus_construct(self)
+        #code_img = show_code_grasp_focus_construct(self)
         # Visualize construction
         construct_initial_solution(self)
+        # TODO: remove code and arrow
 
         # Show the general code and focus on repair
         show_code_grasp_focus_feasible(self)
@@ -550,8 +624,7 @@ class GRASP(Scene):
         # TODO: Visualize repair
 
         # Show the general code and focus on local search
-        show_code_grasp_focus_search(self)
-        # TODO: Show the code for local search
+        code_img = show_code_grasp_focus_search(self)
         # TODO: Visualize local search
         # TODO: differenciate between best and first
         # TODO: explain what the neighborhood is
