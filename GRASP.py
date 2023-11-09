@@ -245,7 +245,10 @@ def explain_p(self):
     line.clear_updaters()
     text.clear_updaters()
 
-    # Return distantes to original position
+    for (i,dist) in DISTANCES.items():
+        problem["DOTS_mobject"][i].clear_updaters()
+
+    # Return distantes to original position and DOTS to original color
     self.play(
         *[distance.animate.next_to(dot, RIGHT).scale(4/3) for (dot,distance) in next_to_mobjects.items()],
         FadeOut(line),
@@ -268,9 +271,6 @@ def explain_restricted_candidate_list(self):
 """Tries all alpha posible combinations to explain how its value affects the
 behaviour of the greedy-randomized approach"""
 def explain_alpha(self, box):
-    # TODO: add formula
-    #text1 = Text(r"[c_min, c_min + α * (c_max - c_min)]")
-
     MIN_ALPHA, MAX_ALPHA = 0, 1
     DISTANCES = get_distances()
     MIN_C, MAX_C = min(DISTANCES.values()), max(DISTANCES.values())
@@ -280,8 +280,19 @@ def explain_alpha(self, box):
 
     # Rectangle to used as a box containing all the info
     new_box = Rectangle(width=4, height=3, fill_color=BLACK, fill_opacity=1).move_to([-5, 2, 0])
+    
 
-    get_text = lambda : Text(f"[{MIN_C:.2f}, {(MIN_C+alpha.get_value()*(MAX_C-MIN_C)):.2f}]").shift(5*LEFT+2.5*UP).scale(1/2)
+    # Initial explanation for alpha
+    raw_formula_text = Paragraph(r"[c_min ,", r"c_min + α*(c_max - c_min)]").shift(5*LEFT+2.75*UP).scale(2/5)
+    alpha_range = Text(r"0 ≤ α ≤ 1").shift(5*LEFT+1.25*UP).scale(1/2)
+    self.play(
+        box.animate.become(new_box),
+        FadeIn(raw_formula_text),
+        FadeIn(alpha_range))
+    self.wait()
+
+
+    get_text = lambda : Text(f"[{MIN_C:.2f}, {(MIN_C+alpha.get_value()*(MAX_C-MIN_C)):.2f}]").shift(5*LEFT+2.75*UP).scale(1/2)
     # The text showing the MIN and MAX values allowed within the range
     range_text = get_text()
     
@@ -298,15 +309,16 @@ def explain_alpha(self, box):
     alpha_text = get_lambda_text()
 
     # All the objects to be displayed
-    objects = [range_text, alpha_text, line, dot]
+    objects = [range_text, alpha_text, dot, line]
     self.play(
-        *[FadeIn(o) for o in objects],
-        box.animate.become(new_box),
+        *[FadeIn(o) for o in objects if o is not range_text],
+        ReplacementTransform(raw_formula_text, range_text),
         *[
             FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR)
             for i in DISTANCES.keys()
             if (DISTANCES[i] <= (MIN_C+alpha.get_value()*(MAX_C-MIN_C)))
-        ]
+        ],
+        FadeOut(alpha_range)
     )
 
     self.wait()
@@ -520,13 +532,18 @@ def show_introduction(self):
     self.add(title_whole_name, group_name)
     self.wait()
 
-    title_GRASP = Text("GRASP").shift(UP*0.5)
-    self.play(ReplacementTransform(title_whole_name, title_GRASP))
+    title_GRASP = Text("GRASP").shift(UP*2)
+
+    details_text = Paragraph("• Multicomienzo", "\n• Optimización combinatoria").scale(2/3)
+
+    self.play(
+        ReplacementTransform(title_whole_name, title_GRASP),
+        FadeOut(group_name),
+        FadeIn(details_text)
+    )
     self.wait()
 
-    # TODO: pensar qué más poner
-
-    self.play(FadeOut(title_GRASP), FadeOut(group_name))
+    self.play(FadeOut(title_GRASP), FadeOut(details_text))
     self.wait()
 
 
@@ -603,20 +620,17 @@ def do_local_search(self):
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
-        # FIXME: uncomment
-        #show_introduction(self)
+        show_introduction(self)
 
         # TODO: explain what problems it can be used for
 
         # Show the general code for GRASP
-        # FIXME: uncomment
-        #explain_code_grasp(self)
+        explain_code_grasp(self)
         self.wait()
 
         # Introduce the problem to solve
         build_problem(self)
-        # FIXME: uncomment
-        #title = introduce_problem(self)
+        title = introduce_problem(self)
         self.wait()
         # TODO: explain how to solve the problem (brute force and other ways)
         # Draw the built problem on the screen
@@ -624,8 +638,7 @@ class GRASP(Scene):
         self.wait()
 
         # Show the general code and the code for construction
-        # FIXME: uncomment
-        #code_img = show_code_grasp_focus_construct(self)
+        code_img = show_code_grasp_focus_construct(self)
         # Visualize construction
         construct_initial_solution(self)
         # TODO: remove code and arrow
