@@ -249,7 +249,8 @@ def explain_p(self):
     self.play(
         *[distance.animate.next_to(dot, RIGHT).scale(4/3) for (dot,distance) in next_to_mobjects.items()],
         FadeOut(line),
-        FadeOut(text)
+        FadeOut(text),
+        *[FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR) for i in DISTANCES.keys()],
     )
 
     return box
@@ -343,11 +344,12 @@ def explain_alpha(self, box):
     alpha_text.clear_updaters()
 
     # Restore view to match previous
+    objects = [range_text, alpha_text, line, dot]
     self.play(
         *[FadeOut(o) for o in objects],
-        #*[FadeToColor(problem["DOTS_mobject"][i], color=DEFAULT_COLOR) for i in DISTANCES.keys()],
         FadeOut(box),
-        FadeOut(new_box)
+        FadeOut(new_box),
+        *[FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR) for i in DISTANCES.keys()],
     )
 
     self.wait()
@@ -443,7 +445,6 @@ def construct_initial_solution(self):
             self.wait()
             # Pause to explain the RCL
             explain_restricted_candidate_list(self)
-            # TODO re-color all the dots in candidate list
 
         # Filter out the worst ones
         restricted_candidate_list = get_restricted_candidate_list(distances, alpha)
@@ -567,23 +568,35 @@ def do_local_search(self):
     solution = problem["DOTS_visited"].copy()
     solution_cost = get_total_cost(solution)
 
+    # TODO: make a copy of all the edges and change its color
+
     # Main loop while current solution is not yet optimal
     while not is_optimal:
         is_optimal = True
 
         # TODO: define and show what the neighborhood is (permutations of adjacent nodes)
         
-        # TODO: calculate all the permutations
+        # Iterate over permutations 
+        for i in range(1, len(solution)):
+            new_solution = solution.copy()
+            new_solution[i-1], new_solution[i] = new_solution[i], new_solution[i-1]
 
-        # TODO: iterate over permutations 
+            # TODO: show animation changing from current to new
+            # TODO: tranform the copy by changing its position
 
-        # TODO: show animation changing from current to new
+            # Compare solutions
+            new_cost = get_total_cost(new_solution)
+            if new_cost < solution_cost:
+                solution, solution_cost = new_solution, new_cost
+                is_optimal = False
 
-        # TODO: compare solutions
+                # TODO: decide whether to do first-fit or best-fit
 
-        # TODO: return to prev state
+            # TODO: display cost
 
-        # TODO: show the best_one of all
+            # TODO: return animation to prev state: move edges to original position
+
+            # TODO: show the best_one of all (if using best-fit)
 
     pass
 
