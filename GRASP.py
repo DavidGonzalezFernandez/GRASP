@@ -8,28 +8,32 @@ problem = {
     "DOTS_coord": [],
     "DOTS_visited": [],
     "EDGES": [],
-    "EDGES_mobject": [],
+    "EDGES_main_mobject": [],
+    "EDGES_tmp_mobject": [],
     "DISTANCES_mobjects": []
 }
 
 
-LAST_VISITED_COLOR = RED
-VISITED_COLOR = GREY
-DEFAULT_COLOR = WHITE
-RCL_COLOR = ORANGE
+VISITING_DOT_COLOR = RED
+VISITED_DOT_COLOR = GREY
+DEFAULT_DOT_COLOR = WHITE
+SELECTED_DOT_COLOR = ORANGE
+
+MAIN_LINE_COLOR = GREY
+EXPLORING_LINE_COLOR = BLUE
 
 
-"""Initializes the dict with all the info for the problem"""
+"""CODE: Initializes the dict with all the info for the problem"""
 def build_problem(self):
     random.seed(2)
     N_POINTS = 20
     for _ in range(N_POINTS):
         x,y = random.uniform(-7, 7), random.uniform(-3, 3)
-        problem["DOTS_mobject"].append(Dot(point=[x, y, 0.0], color=DEFAULT_COLOR))
+        problem["DOTS_mobject"].append(Dot(point=[x, y, 0.0], color=DEFAULT_DOT_COLOR))
         problem["DOTS_coord"].append((x,y))
 
 
-"""Animation to draw the problem on the screen"""
+"""ANIMATION: draws the problem on the screen"""
 def display_problem(self, title=None):
     # Remove the title
     if title is not None:
@@ -39,7 +43,7 @@ def display_problem(self, title=None):
     self.play(
         LaggedStart(
             *[Create(p) for p in problem["DOTS_mobject"]],
-            *[Create(l) for l in problem["EDGES_mobject"]],
+            *[Create(l) for l in problem["EDGES_main_mobject"]],
             lag_ratio = 0.1
         )
     )
@@ -54,6 +58,7 @@ get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.4).move
 get_rectangle_whole_if_feasible = lambda : Rectangle(height=LINE_HEIGHT*2 - 0.1, width=5.45).move_to(0.175*DOWN + 1.15*LEFT)
 get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.8*DOWN + 0.95*LEFT)
 
+"""ANIMATION: TODO: document"""
 def show_code_grasp_focus(self, rect, initial=None, then=None):
     # Show the code
     img, huge_rect = show_code_grasp(self, rect)
@@ -82,6 +87,8 @@ def show_code_grasp_focus(self, rect, initial=None, then=None):
     self.wait()
     return then
 
+
+"""ANIMATION: TODO: document"""
 def show_code_grasp_focus_construct(s):
     img = show_code_grasp_focus(
         s,
@@ -91,16 +98,20 @@ def show_code_grasp_focus_construct(s):
     )
     return img
 
+
+"""ANIMATION: TODO: document"""
 def show_code_grasp_focus_search(s):
+    # TODO: show first vs best approach
     img = show_code_grasp_focus(
         s,
         get_rectangle_local_search(),
         ImageMobject("my_media//search_code_snippet_v3.png"),
-        ImageMobject("my_media//search_code_snippet_v3.png").scale(1/2).shift(UP*2 + LEFT*5)
+        ImageMobject("my_media//search_code_snippet_v4.png").scale(1/2).shift(UP*2 + LEFT*5)
     )
     return img
 
 
+"""ANIMATION: TODO: document"""
 show_code_grasp_focus_feasible = lambda s : show_code_grasp_focus(
     s,
     get_rectangle_whole_if_feasible(),
@@ -108,36 +119,15 @@ show_code_grasp_focus_feasible = lambda s : show_code_grasp_focus(
 )
 
 
-"""Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
+"""ANIMATION: Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
 def explain_code_grasp(self):
     image, rect = show_code_grasp(self)
-    
-    rectangle_while = get_rectangle_while()
-    rectangle_construct = get_rectangle_construct()
-    rectangle_whole_if_feasible = get_rectangle_whole_if_feasible()
-    rectangle_local_search = get_rectangle_local_search()
-
-    # Focus con construct
-    self.play(Create(rectangle_construct))
-    self.wait()
-
-    # Focus on repair
-    self.play(ReplacementTransform(rectangle_construct, rectangle_whole_if_feasible))
-    self.wait()
-
-    # Focur on local search
-    self.play(ReplacementTransform(rectangle_whole_if_feasible, rectangle_local_search))
-    self.wait()
-
-    # Focus on loop
-    self.play(ReplacementTransform(rectangle_local_search, rectangle_while))
-    self.wait()
 
     # Remove image and rectangle
-    self.play(FadeOut(image), FadeOut(rectangle_while), FadeOut(rect))
+    self.play(FadeOut(image), FadeOut(rect))
 
 
-"""Shows the code for GRASP"""
+"""ANIMATION: Shows the code for GRASP"""
 def show_code_grasp(self, additional_mobjects=[]):
     rect = get_huge_black_rectangle()
     DOWN_SHIFT = 0
@@ -155,6 +145,8 @@ def show_code_grasp(self, additional_mobjects=[]):
     return image, rect
 
 
+"""ANIMATION: Tries all p posible values to explain how its value affects the
+behaviour of the greedy-randomized approach"""
 def explain_p(self):
     DISTANCES = get_distances()
     MIN_P, MAX_P = 1, len(DISTANCES.values())
@@ -212,8 +204,8 @@ def explain_p(self):
     self.play(
         Create(line),
         Create(text),
-        *[FadeToColor(d, DEFAULT_COLOR) for d in the_dots_1],
-        *[FadeToColor(d, RCL_COLOR) for d in the_dots_2]
+        *[FadeToColor(d, DEFAULT_DOT_COLOR) for d in the_dots_1],
+        *[FadeToColor(d, SELECTED_DOT_COLOR) for d in the_dots_2]
     )
 
     def line_updater(line):
@@ -222,7 +214,7 @@ def explain_p(self):
 
     for (i,dist) in DISTANCES.items():
         def the_updater(x, dist=dist):
-            x.set_color(DEFAULT_COLOR if (sorted(DISTANCES.values()).index(dist)+1 > int(p.get_value())) else RCL_COLOR)
+            x.set_color(DEFAULT_DOT_COLOR if (sorted(DISTANCES.values()).index(dist)+1 > int(p.get_value())) else SELECTED_DOT_COLOR)
         problem["DOTS_mobject"][i].add_updater(the_updater)
     
     line.add_updater(line_updater)
@@ -253,12 +245,13 @@ def explain_p(self):
         *[distance.animate.next_to(dot, RIGHT).scale(4/3) for (dot,distance) in next_to_mobjects.items()],
         FadeOut(line),
         FadeOut(text),
-        *[FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR) for i in DISTANCES.keys()],
+        *[FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR) for i in DISTANCES.keys()],
     )
 
     return box
 
-"""Explains how to create the RCL"""
+
+"""ANIMATION: Explains how to create the RCL"""
 def explain_restricted_candidate_list(self):
     # Explain p
     box = explain_p(self)
@@ -268,7 +261,7 @@ def explain_restricted_candidate_list(self):
     explain_alpha(self, box)
 
 
-"""Tries all alpha posible combinations to explain how its value affects the
+"""ANIMATION: Tries all alpha posible p to explain how its value affects the
 behaviour of the greedy-randomized approach"""
 def explain_alpha(self, box):
     MIN_ALPHA, MAX_ALPHA = 0, 1
@@ -314,7 +307,7 @@ def explain_alpha(self, box):
         *[FadeIn(o) for o in objects if o is not range_text],
         ReplacementTransform(raw_formula_text, range_text),
         *[
-            FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR)
+            FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR)
             for i in DISTANCES.keys()
             if (DISTANCES[i] <= (MIN_C+alpha.get_value()*(MAX_C-MIN_C)))
         ],
@@ -326,7 +319,7 @@ def explain_alpha(self, box):
     for (i,d) in DISTANCES.items():
         # Update the colors of the points if they can be included in RCL
         def the_updater(x, i=i):
-            x.set_color(DEFAULT_COLOR if (DISTANCES[i] > (MIN_C+alpha.get_value()*(MAX_C-MIN_C))) else RCL_COLOR)
+            x.set_color(DEFAULT_DOT_COLOR if (DISTANCES[i] > (MIN_C+alpha.get_value()*(MAX_C-MIN_C))) else SELECTED_DOT_COLOR)
         problem["DOTS_mobject"][i].add_updater(the_updater)
 
     def update_lambda(point):
@@ -361,13 +354,13 @@ def explain_alpha(self, box):
         *[FadeOut(o) for o in objects],
         FadeOut(box),
         FadeOut(new_box),
-        *[FadeToColor(problem["DOTS_mobject"][i], color=RCL_COLOR) for i in DISTANCES.keys()],
+        *[FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR) for i in DISTANCES.keys()],
     )
 
     self.wait()
 
 
-"""Calculates the distance from the last visited point to all non-visited points"""
+"""CODE: Calculates the distance from the last visited point to all non-visited points"""
 def get_distances():
     last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
 
@@ -378,7 +371,7 @@ def get_distances():
     }
 
 
-"""Calculates the RCL given a list of distances and alpha value"""
+"""CODE: Calculates the RCL given a list of distances and alpha value"""
 def get_restricted_candidate_list(distances, alpha):
     max_distance, min_distance = max(distances.values()), min(distances.values())
 
@@ -389,8 +382,8 @@ def get_restricted_candidate_list(distances, alpha):
     }
 
 
-"""Shows the greedy-randomized construction of a solution"""
-def construct_initial_solution(self):
+"""ANIMATION & CODE: greedy-randomized construction of a solution"""
+def construct_initial_solution(self, img_code):
     alpha = 0.2
 
     random.seed(0)
@@ -413,7 +406,7 @@ def construct_initial_solution(self):
 
     # Change color of the point
     self.play(
-        FadeToColor(problem["DOTS_mobject"][index], color=LAST_VISITED_COLOR),
+        FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
         Create(arrow)
     )
     self.wait()
@@ -426,7 +419,7 @@ def construct_initial_solution(self):
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
             self.play(
                 arrow.animate.move_to(pos_get_cand_1 if len(problem["DOTS_visited"])==1 else pos_get_cand_2),
-                *[FadeToColor(p, RCL_COLOR) for (i,p) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"]]
+                *[FadeToColor(p, SELECTED_DOT_COLOR) for (i,p) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"]]
             )
             self.wait()
         elif len(problem["DOTS_visited"]) == NUM_STEP_BY_STEP+1:
@@ -466,8 +459,8 @@ def construct_initial_solution(self):
             the_dots_1 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i not in restricted_candidate_list.keys()]
             the_dots_2 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i in restricted_candidate_list.keys()]
             self.play(
-                *[FadeToColor(d, color=DEFAULT_COLOR) for d in the_dots_1],
-                *[FadeToColor(d, color=RCL_COLOR) for d in the_dots_2],
+                *[FadeToColor(d, color=DEFAULT_DOT_COLOR) for d in the_dots_1],
+                *[FadeToColor(d, color=SELECTED_DOT_COLOR) for d in the_dots_2],
                 arrow.animate.move_to(pos_RCL),
                 *[FadeOut(t) for t in distances_text]
             )
@@ -480,18 +473,18 @@ def construct_initial_solution(self):
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
             the_dots = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i in restricted_candidate_list.keys()]
             self.play(
-                *[FadeToColor(d, color=DEFAULT_COLOR) for d in the_dots if d is not problem["DOTS_mobject"][index]],
+                *[FadeToColor(d, color=DEFAULT_DOT_COLOR) for d in the_dots if d is not problem["DOTS_mobject"][index]],
                 arrow.animate.move_to(pos_random)
             )
             self.wait()
 
         # Animations for visiting
         new_x, new_y = problem["DOTS_coord"][index]
-        line = Line([last_x, last_y, 0], [new_x, new_y, 0])
+        line = Line([last_x, last_y, 0], [new_x, new_y, 0], color=MAIN_LINE_COLOR)
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
             self.play(
-                FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_COLOR),
-                FadeToColor(problem["DOTS_mobject"][index], color=LAST_VISITED_COLOR),
+                FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
+                FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
                 Create(line),
                 arrow.animate.move_to(pos_append),
                 run_time = 1
@@ -499,32 +492,34 @@ def construct_initial_solution(self):
             self.wait()
         else:
             self.play(
-                FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_COLOR),
-                FadeToColor(problem["DOTS_mobject"][index], color=LAST_VISITED_COLOR),
+                FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
+                FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
                 Create(line),
                 run_time = 1/3
             )
 
-        problem["EDGES_mobject"].append(line)
+        problem["EDGES_main_mobject"].append(line)
         problem["DOTS_visited"].append(index)
-
-
 
     # Go back to initial position
     last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
     new_x, new_y = problem["DOTS_coord"][ problem["DOTS_visited"][0] ]
-    line = Line([last_x, last_y, 0], [new_x, new_y, 0])
+    line = Line([last_x, last_y, 0], [new_x, new_y, 0], color=MAIN_LINE_COLOR)
     self.play(
-        FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_COLOR),
+        FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
         Create(line),
         arrow.animate.move_to(pos_return)
     )
-    problem["EDGES_mobject"].append(line)
+    problem["EDGES_main_mobject"].append(line)
 
     self.wait()
 
+    # Remove code
+    self.play(FadeOut(arrow), FadeOut(img_code))
+    self.wait()
 
-"""Shows the title to do the introduction"""
+
+"""ANIMATION: Shows the title to do the introduction"""
 def show_introduction(self):
     group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/5).shift(DOWN*3)
 
@@ -547,6 +542,7 @@ def show_introduction(self):
     self.wait()
 
 
+"""CODE: Returns the total cost given an order of visited nodes"""
 def get_total_cost(order):
     res = 0
 
@@ -560,6 +556,7 @@ def get_total_cost(order):
 
         else:
             assert problem["DOTS_coord"][order[i]] == problem["DOTS_coord"][order[-1]]
+            assert i==len(order)-1  and  (i+1)%len(order) == 0
 
             res += (
                 abs(problem["DOTS_coord"][order[i]][0] - problem["DOTS_coord"][order[0]][0])**2 + 
@@ -569,62 +566,97 @@ def get_total_cost(order):
             assert res >= 0
             assert res >= prev
 
+            # TODO: simplify
+
     return res
 
 
+"""ANIMATION: Displays the title of the problem"""
 def introduce_problem(self):
     title = Text("Problema del viajante")
     self.play(Create(title))
     return title
 
 
-
-def do_local_search(self):
+"""ANIMATION & CODE: """
+def do_local_search(self, code_img):
     is_optimal = False
     
     solution = problem["DOTS_visited"].copy()
     solution_cost = get_total_cost(solution)
 
-    # TODO: make a copy of all the edges and change its color
+    # Make a copy of all the edges
+    for edge in problem["EDGES_main_mobject"]:
+        new_edge = Line(edge.start, edge.end, color=MAIN_LINE_COLOR)
+        problem["EDGES_tmp_mobject"].append(new_edge)
+    
+    # Color the edges
+    self.add(*problem["EDGES_tmp_mobject"])
+    self.play(*[FadeToColor(l, EXPLORING_LINE_COLOR) for l in problem["EDGES_tmp_mobject"]])
+    self.wait()
+
+    assert len(problem["DOTS_visited"]) == len(problem["EDGES_tmp_mobject"])
+    for (i,edge) in enumerate(problem["EDGES_tmp_mobject"]):
+        def the_updater(edge, i=i):
+            edge.become(Line(
+                problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center(),
+                problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_visited"])]].get_center(),
+                color=EXPLORING_LINE_COLOR
+            ))
+        edge.add_updater(the_updater)
 
     # Main loop while current solution is not yet optimal
+    # TODO show cost
+
     while not is_optimal:
+        # TODO: re-draw the edges (not needed when it's the first iteration)
         is_optimal = True
 
-        # TODO: define and show what the neighborhood is (permutations of adjacent nodes)
-        
         # Iterate over permutations 
-        for i in range(1, len(solution)):
+        for i in range(len(solution)):
             new_solution = solution.copy()
             new_solution[i-1], new_solution[i] = new_solution[i], new_solution[i-1]
 
-            # TODO: show animation changing from current to new
-            # TODO: tranform the copy by changing its position
+            # Do the permutation
+            self.play(
+                problem["DOTS_mobject"][problem["DOTS_visited"][i]].
+                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
+                problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
+                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center())
+            )
+            self.wait()
 
             # Compare solutions
             new_cost = get_total_cost(new_solution)
             if new_cost < solution_cost:
                 solution, solution_cost = new_solution, new_cost
-                is_optimal = False
+                # FIXME: uncomment
+                # is_optimal = False # TODO: 
 
                 # TODO: decide whether to do first-fit or best-fit
 
-            # TODO: display cost
+            # TODO: display new cost
 
-            # TODO: return animation to prev state: move edges to original position
+            # Return animation to prev state: move edges to original position
+            self.play(
+                problem["DOTS_mobject"][problem["DOTS_visited"][i]].
+                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
+                problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
+                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center())
+            )
 
+            # TODO: decide whether to do first-fit or best-fit
             # TODO: show the best_one of all (if using best-fit)
 
-    pass
+    self.play(FadeOut(code_img))
 
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
         show_introduction(self)
 
-        # TODO: explain what problems it can be used for
-
         # Show the general code for GRASP
+        # TODO: remove focus on helper-functions
         explain_code_grasp(self)
         self.wait()
 
@@ -640,8 +672,7 @@ class GRASP(Scene):
         # Show the general code and the code for construction
         code_img = show_code_grasp_focus_construct(self)
         # Visualize construction
-        construct_initial_solution(self)
-        # TODO: remove code and arrow
+        construct_initial_solution(self, code_img)
 
         # Show the general code and focus on repair
         show_code_grasp_focus_feasible(self)
@@ -651,7 +682,8 @@ class GRASP(Scene):
 
         # Show the general code and focus on local search
         code_img = show_code_grasp_focus_search(self)
-        # TODO: Visualize local search
+        # Visualize local search
+        do_local_search(self, code_img)
         # TODO: differenciate between best and first
         # TODO: explain what the neighborhood is
 
