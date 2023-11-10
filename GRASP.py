@@ -42,8 +42,9 @@ def display_problem(self, title=None):
     # Create the Dots
     self.play(
         LaggedStart(
-            *[Create(p) for p in problem["DOTS_mobject"]],
-            *[Create(l) for l in problem["EDGES_main_mobject"]],
+            *[Create(d) for d in problem["DOTS_mobject"]],
+            *[Create(e) for e in problem["EDGES_main_mobject"]],
+            *[Create(e) for e in problem["EDGES_tmp_mobject"]]
             lag_ratio = 0.1
         )
     )
@@ -58,65 +59,79 @@ get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.4).move
 get_rectangle_whole_if_feasible = lambda : Rectangle(height=LINE_HEIGHT*2 - 0.1, width=5.45).move_to(0.175*DOWN + 1.15*LEFT)
 get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.8*DOWN + 0.95*LEFT)
 
-"""ANIMATION: TODO: document"""
-def show_code_grasp_focus(self, rect, initial=None, then=None):
+
+"""ANIMATION: Shows the code and draws a rectangle around the construction invocation"""
+def show_code_grasp_focus_construct(s):
+    rect = get_rectangle_construct()
+    code_img = ImageMobject("my_media//construction_code_snippet_v2.png")
+
     # Show the code
     img, huge_rect = show_code_grasp(self, rect)
     self.wait()
-    if then is None:
-        # Remove the code and others
-        self.play(
-            FadeOut(huge_rect), 
-            FadeOut(img), 
-            FadeOut(rect)
-        )
-    else:
-        # Change code to other image
-        self.play(
-            FadeOut(img), 
-            FadeOut(rect), 
-            FadeIn(initial)
-        )
 
-        self.wait()
-        # Transform image into another (to scale and change position)
-        self.play(
-            FadeOut(huge_rect),
-            initial.animate.become(then)
-        )
+    # Show specific implementation for helper function
+    self.play(
+        FadeOut(img), 
+        FadeOut(rect), 
+        FadeIn(code_img)
+    )
     self.wait()
-    return then
 
-
-"""ANIMATION: TODO: document"""
-def show_code_grasp_focus_construct(s):
-    img = show_code_grasp_focus(
-        s,
-        get_rectangle_construct(),
-        ImageMobject("my_media//construction_code_snippet_v2.png"),
-        ImageMobject("my_media//construction_code_snippet_v2.png").scale(1/2).shift(UP*2 + LEFT*5)
+    # Scale and move the code
+    self.play(
+        FadeOut(huge_rect),
+        code_img.animate.become(ImageMobject("my_media//construction_code_snippet_v2.png").scale(1/2).shift(UP*2 + LEFT*5))
     )
-    return img
+    self.wait()
 
+    return code_img
+    
 
-"""ANIMATION: TODO: document"""
+"""ANIMATION: Shows the code and draws a rectangle around the local search invocation"""
 def show_code_grasp_focus_search(s):
-    # TODO: show first vs best approach
-    img = show_code_grasp_focus(
-        s,
-        get_rectangle_local_search(),
-        ImageMobject("my_media//search_code_snippet_v3.png"),
-        ImageMobject("my_media//search_code_snippet_v4.png").scale(1/2).shift(UP*2 + LEFT*5)
+
+    rect = get_rectangle_local_search()
+    code_img = ImageMobject("my_media//search_code_snippet_v3.png")
+
+    # Show the code
+    img, huge_rect = show_code_grasp(self, rect)
+    self.wait()
+
+    #Show specific implementation for helper function
+    self.play(
+        FadeOut(img), 
+        FadeOut(rect), 
+        FadeIn(code_img)
     )
-    return img
+    self.wait()
+
+    # TODO: show first vs best approach
+    code_img.become(ImageMobject("my_media//search_code_snippet_v2.png"))
+
+    # Scale and move the code
+    self.play(
+        FadeOut(huge_rect),
+        code_img.animate.become(ImageMobject("my_media//search_code_snippet_v4.png").scale(1/2).shift(UP*2 + LEFT*5))
+    )
+    self.wait()
+
+    return code_img
 
 
-"""ANIMATION: TODO: document"""
-show_code_grasp_focus_feasible = lambda s : show_code_grasp_focus(
-    s,
-    get_rectangle_whole_if_feasible(),
-    None
-)
+"""ANIMATION: Shows the code and draws a rectangle around the is_feasible snippet"""
+def show_code_grasp_focus_feasible():
+    rect = get_rectangle_whole_if_feasible()
+
+    # Show the code
+    img, huge_rect = show_code_grasp(self, rect)
+    self.wait()
+
+    # Remove the code and others
+    self.play(
+        FadeOut(huge_rect), 
+        FadeOut(img), 
+        FadeOut(rect)
+    )
 
 
 """ANIMATION: Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
@@ -382,7 +397,8 @@ def get_restricted_candidate_list(distances, alpha):
     }
 
 
-"""ANIMATION & CODE: greedy-randomized construction of a solution"""
+"""ANIMATION & CODE: greedy-randomized construction of a solution.
+Shows the process and updates the dict"""
 def construct_initial_solution(self, img_code):
     alpha = 0.2
 
@@ -556,6 +572,7 @@ def get_total_cost(order):
 
         else:
             assert problem["DOTS_coord"][order[i]] == problem["DOTS_coord"][order[-1]]
+            # TODO: simplify using the formula in the assert below
             assert i==len(order)-1  and  (i+1)%len(order) == 0
 
             res += (
@@ -566,7 +583,6 @@ def get_total_cost(order):
             assert res >= 0
             assert res >= prev
 
-            # TODO: simplify
 
     return res
 
@@ -578,7 +594,8 @@ def introduce_problem(self):
     return title
 
 
-"""ANIMATION & CODE: """
+"""ANIMATION & CODE: performs the local search given the current solution in the dict
+Shows the process and updates the dict"""
 def do_local_search(self, code_img):
     is_optimal = False
     
@@ -650,13 +667,14 @@ def do_local_search(self, code_img):
 
     self.play(FadeOut(code_img))
 
+
+"""MAIN"""
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
         show_introduction(self)
 
         # Show the general code for GRASP
-        # TODO: remove focus on helper-functions
         explain_code_grasp(self)
         self.wait()
 
@@ -697,3 +715,4 @@ class GRASP(Scene):
 
         # TODO: End of video
         # TODO: Add references
+        # TODO: Show our names
