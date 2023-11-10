@@ -7,12 +7,12 @@ problem = {
     "DOTS_mobject": [],
     "DOTS_coord": [],
     "DOTS_visited": [],
+    "DOTS_VISITED_search": [],
     "EDGES": [],
     "EDGES_main_mobject": [],
     "EDGES_tmp_mobject": [],
-    "DISTANCES_mobjects": []
+    "DISTANCES_mobjects": [],
 }
-
 
 VISITING_DOT_COLOR = RED
 VISITED_DOT_COLOR = GREY
@@ -31,6 +31,7 @@ def build_problem(self):
         x,y = random.uniform(-7, 7), random.uniform(-3, 3)
         problem["DOTS_mobject"].append(Dot(point=[x, y, 0.0], color=DEFAULT_DOT_COLOR))
         problem["DOTS_coord"].append((x,y))
+        print(_, x, y)
 
 
 """ANIMATION: draws the problem on the screen"""
@@ -44,7 +45,7 @@ def display_problem(self, title=None):
         LaggedStart(
             *[Create(d) for d in problem["DOTS_mobject"]],
             *[Create(e) for e in problem["EDGES_main_mobject"]],
-            *[Create(e) for e in problem["EDGES_tmp_mobject"]]
+            *[Create(e) for e in problem["EDGES_tmp_mobject"]],
             lag_ratio = 0.1
         )
     )
@@ -61,7 +62,7 @@ get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).m
 
 
 """ANIMATION: Shows the code and draws a rectangle around the construction invocation"""
-def show_code_grasp_focus_construct(s):
+def show_code_grasp_focus_construct(self):
     rect = get_rectangle_construct()
     code_img = ImageMobject("my_media//construction_code_snippet_v2.png")
 
@@ -88,14 +89,17 @@ def show_code_grasp_focus_construct(s):
     
 
 """ANIMATION: Shows the code and draws a rectangle around the local search invocation"""
-def show_code_grasp_focus_search(s):
+def show_code_grasp_focus_search(self):
 
     rect = get_rectangle_local_search()
-    code_img = ImageMobject("my_media//search_code_snippet_v3.png")
+    code_img = ImageMobject("my_media//search_code_snippet_v4.png")
+    code_img_2 = ImageMobject("my_media//search_code_snippet_v5.png")
 
     # Show the code
     img, huge_rect = show_code_grasp(self, rect)
     self.wait()
+
+    rect_break = Rectangle(height=0.45, width=1).shift(DOWN*1.425 + LEFT * 1.655)
 
     #Show specific implementation for helper function
     self.play(
@@ -105,21 +109,27 @@ def show_code_grasp_focus_search(s):
     )
     self.wait()
 
-    # TODO: show first vs best approach
-    code_img.become(ImageMobject("my_media//search_code_snippet_v2.png"))
+    # Compare first vs best approach
+    self.play(
+        FadeOut(code_img),
+        FadeIn(code_img_2),
+        Create(rect_break)
+    )
+    self.wait()
 
     # Scale and move the code
     self.play(
         FadeOut(huge_rect),
-        code_img.animate.become(ImageMobject("my_media//search_code_snippet_v4.png").scale(1/2).shift(UP*2 + LEFT*5))
+        FadeOut(rect_break),
+        code_img_2.animate.scale(1/2).shift(UP*2.1 + LEFT*4.9)
     )
     self.wait()
 
-    return code_img
+    return code_img_2
 
 
 """ANIMATION: Shows the code and draws a rectangle around the is_feasible snippet"""
-def show_code_grasp_focus_feasible():
+def show_code_grasp_focus_feasible(self):
     rect = get_rectangle_whole_if_feasible()
 
     # Show the code
@@ -138,8 +148,30 @@ def show_code_grasp_focus_feasible():
 def explain_code_grasp(self):
     image, rect = show_code_grasp(self)
 
+    rectangle_while = get_rectangle_while()
+    rectangle_construct = get_rectangle_construct()
+    rectangle_whole_if_feasible = get_rectangle_whole_if_feasible()
+    rectangle_local_search = get_rectangle_local_search()
+
+    # Focus con construct
+    self.play(Create(rectangle_construct))
+    self.wait()
+
+    # Focus on repair
+    self.play(ReplacementTransform(rectangle_construct, rectangle_whole_if_feasible))
+    self.wait()
+
+    # Focur on local search
+    self.play(ReplacementTransform(rectangle_whole_if_feasible, rectangle_local_search))
+    self.wait()
+
+    # Focus on loop
+    self.play(ReplacementTransform(rectangle_local_search, rectangle_while))
+    self.wait()
+
     # Remove image and rectangle
-    self.play(FadeOut(image), FadeOut(rect))
+    self.play(FadeOut(image), FadeOut(rect), FadeOut(rectangle_while))
+    self.wait()
 
 
 """ANIMATION: Shows the code for GRASP"""
@@ -149,9 +181,12 @@ def show_code_grasp(self, additional_mobjects=[]):
     image = ImageMobject("my_media//GRASP_code_snippet_v4.png").shift(DOWN_SHIFT * DOWN)
 
     self.play(
-        FadeIn(rect),
-        FadeIn(image),
-        *[FadeIn(o) for o in additional_mobjects]    
+        LaggedStart(
+            Create(rect),
+            FadeIn(image),
+            *[Create(o) for o in additional_mobjects],
+            lag_ratio = 0.1
+        )
     )
 
     self.wait()
@@ -289,7 +324,6 @@ def explain_alpha(self, box):
     # Rectangle to used as a box containing all the info
     new_box = Rectangle(width=4, height=3, fill_color=BLACK, fill_opacity=1).move_to([-5, 2, 0])
     
-
     # Initial explanation for alpha
     raw_formula_text = Paragraph(r"[c_min ,", r"c_min + α*(c_max - c_min)]").shift(5*LEFT+2.75*UP).scale(2/5)
     alpha_range = Text(r"0 ≤ α ≤ 1").shift(5*LEFT+1.25*UP).scale(1/2)
@@ -360,11 +394,15 @@ def explain_alpha(self, box):
         problem["DOTS_mobject"][i].clear_updaters()
     
     range_text.clear_updaters()
-    dot.clear_updaters()
     alpha_text.clear_updaters()
+    dot.clear_updaters()
+
+    # TODO: remove just to check where it fails
+    self.wait()
 
     # Restore view to match previous
-    objects = [range_text, alpha_text, line, dot]
+    # FIXME: fix the animation
+
     self.play(
         *[FadeOut(o) for o in objects],
         FadeOut(box),
@@ -402,7 +440,7 @@ Shows the process and updates the dict"""
 def construct_initial_solution(self, img_code):
     alpha = 0.2
 
-    random.seed(0)
+    random.seed(1)
 
     # Choose initial point and modify list
     index = random.randint(0, len(problem["DOTS_mobject"]))
@@ -594,8 +632,8 @@ def introduce_problem(self):
     return title
 
 
-"""ANIMATION & CODE: performs the local search given the current solution in the dict
-Shows the process and updates the dict"""
+"""ANIMATION & CODE: performs the local search given the current solution in the dict.
+Used first-fit approach. Shows the process and updates the dict"""
 def do_local_search(self, code_img):
     is_optimal = False
     
@@ -604,12 +642,22 @@ def do_local_search(self, code_img):
 
     # Make a copy of all the edges
     for edge in problem["EDGES_main_mobject"]:
-        new_edge = Line(edge.start, edge.end, color=MAIN_LINE_COLOR)
+        new_edge = Line(edge.start, edge.end, color=MAIN_LINE_COLOR, z_index=1)
         problem["EDGES_tmp_mobject"].append(new_edge)
     
-    # Color the edges
     self.add(*problem["EDGES_tmp_mobject"])
-    self.play(*[FadeToColor(l, EXPLORING_LINE_COLOR) for l in problem["EDGES_tmp_mobject"]])
+
+    original_cost_text = Text(f"{solution_cost:.2f}", color=VISITED_DOT_COLOR).scale(1/2).shift(DOWN * 3 + RIGHT * 5)
+    new_cost_text = Text("¿?", color=EXPLORING_LINE_COLOR).scale(1/2).shift(DOWN * 3.5 + RIGHT * 5)
+
+    # Color the edges
+    self.play(
+        *[FadeToColor(l, EXPLORING_LINE_COLOR) for l in problem["EDGES_tmp_mobject"]],
+        FadeIn(original_cost_text)
+    )
+
+    # TODO: explain what the neighborhood is
+
     self.wait()
 
     assert len(problem["DOTS_visited"]) == len(problem["EDGES_tmp_mobject"])
@@ -622,50 +670,78 @@ def do_local_search(self, code_img):
             ))
         edge.add_updater(the_updater)
 
-    # Main loop while current solution is not yet optimal
-    # TODO show cost
+    slow_iterations = 2
+    n_neighborhood = 0
+    ORIGINAL_NEW_SHIFT = DOWN
 
+    # Main loop while current solution is not yet optimal
     while not is_optimal:
-        # TODO: re-draw the edges (not needed when it's the first iteration)
+        n_neighborhood += 1
+        if n_neighborhood > 1:
+            self.play(
+                # Move the main after having found better solution
+                *[line.animate.become(
+                    Line(
+                        problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center(),
+                        problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_visited"])]].get_center(),
+                        color = MAIN_LINE_COLOR
+                    )
+                ) for (i,line) in enumerate(problem["EDGES_main_mobject"])],
+
+                # Update original cost and new cost
+                original_cost_text.animate.become(Text(f"{solution_cost:.2f}", color=VISITED_DOT_COLOR).scale(1/2).shift(DOWN * 3 + RIGHT * 5)),
+                FadeOut(new_cost_text),
+                run_time = 1 if slow_iterations >= 0 else 1/3
+            )
+
         is_optimal = True
 
         # Iterate over permutations 
         for i in range(len(solution)):
+            slow_iterations -= 1
+
             new_solution = solution.copy()
-            new_solution[i-1], new_solution[i] = new_solution[i], new_solution[i-1]
-
-            # Do the permutation
-            self.play(
-                problem["DOTS_mobject"][problem["DOTS_visited"][i]].
-                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
-                problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
-                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center())
-            )
-            self.wait()
-
-            # Compare solutions
+            new_solution[i], new_solution[(i+1) % len(new_solution)] = new_solution[(i+1) % len(new_solution)], new_solution[i]
             new_cost = get_total_cost(new_solution)
-            if new_cost < solution_cost:
-                solution, solution_cost = new_solution, new_cost
-                # FIXME: uncomment
-                # is_optimal = False # TODO: 
 
-                # TODO: decide whether to do first-fit or best-fit
+            # Save time only showing the whole animation in first neighborhood (n_neighborhood==1)
+            if n_neighborhood==1 or (new_cost < solution_cost):
+                new_cost_text = Text(f"{new_cost:.2f}", color=EXPLORING_LINE_COLOR).scale(1/2).next_to(original_cost_text, ORIGINAL_NEW_SHIFT)
+                # Do the permutation
+                self.play(
+                    problem["DOTS_mobject"][problem["DOTS_visited"][i]].
+                        animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
+                    problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
+                        animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center()),
+                    FadeIn(new_cost_text),
+                    run_time = 1 if slow_iterations >= 0 else 1/3
+                )
 
-            # TODO: display new cost
+                if slow_iterations >= 0:
+                    self.wait()
 
-            # Return animation to prev state: move edges to original position
-            self.play(
-                problem["DOTS_mobject"][problem["DOTS_visited"][i]].
-                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
-                problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
-                    animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center())
-            )
+                # Compare solutions
+                if new_cost < solution_cost:
+                    # Using first-fit or best-fit
+                    solution, solution_cost = new_solution.copy(), new_cost
+                    is_optimal = False
+                    if n_neighborhood==1:
+                        self.wait()
+                    break
 
-            # TODO: decide whether to do first-fit or best-fit
-            # TODO: show the best_one of all (if using best-fit)
+                # Return animation to prev state: move edges to original position
+                self.play(
+                    problem["DOTS_mobject"][problem["DOTS_visited"][i]].
+                        animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
+                    problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
+                        animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][i]].get_center()),
+                    FadeOut(new_cost_text),
+                    run_time = 1 if slow_iterations >= 0 else 1/3
+                )
 
     self.play(FadeOut(code_img))
+    problem["DOTS_VISITED_search"].clear()
+    problem["DOTS_VISITED_search"].extend(solution.copy())
 
 
 """MAIN"""
@@ -675,14 +751,14 @@ class GRASP(Scene):
         show_introduction(self)
 
         # Show the general code for GRASP
-        explain_code_grasp(self)
+        image, rect = show_code_grasp(self)
+        self.play(FadeOut(image), FadeOut(rect))
         self.wait()
 
         # Introduce the problem to solve
         build_problem(self)
         title = introduce_problem(self)
         self.wait()
-        # TODO: explain how to solve the problem (brute force and other ways)
         # Draw the built problem on the screen
         display_problem(self, title)
         self.wait()
@@ -702,10 +778,8 @@ class GRASP(Scene):
         code_img = show_code_grasp_focus_search(self)
         # Visualize local search
         do_local_search(self, code_img)
-        # TODO: differenciate between best and first
-        # TODO: explain what the neighborhood is
 
-        # TODO: Redo explanation of code
+        explain_code_grasp(self)
 
         # TODO: Show how parameters affect the found solution, exploration space, execution time
         # TODO: pending: order-vs-value, alpha value, p value, first-vs-best
