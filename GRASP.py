@@ -17,7 +17,7 @@ problem = {
 VISITING_DOT_COLOR = RED
 VISITED_DOT_COLOR = GREY
 DEFAULT_DOT_COLOR = WHITE
-SELECTED_DOT_COLOR = ORANGE
+SELECTED_DOT_COLOR = BLUE
 
 MAIN_LINE_COLOR = GREY
 EXPLORING_LINE_COLOR = BLUE
@@ -31,7 +31,6 @@ def build_problem(self):
         x,y = random.uniform(-7, 7), random.uniform(-3, 3)
         problem["DOTS_mobject"].append(Dot(point=[x, y, 0.0], color=DEFAULT_DOT_COLOR))
         problem["DOTS_coord"].append((x,y))
-        print(_, x, y)
 
 
 """ANIMATION: draws the problem on the screen"""
@@ -55,10 +54,9 @@ def display_problem(self, title=None):
 get_huge_black_rectangle = lambda : Rectangle(height=100, width=100, color=BLACK, fill_color=BLACK, fill_opacity=1)
 
 LINE_HEIGHT = 0.5
-get_rectangle_while = lambda : Rectangle(height=LINE_HEIGHT, width=4.8).move_to(2.15*LEFT + 0.875*UP)
-get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.4).move_to(1.14*LEFT + 0.425*UP)
-get_rectangle_whole_if_feasible = lambda : Rectangle(height=LINE_HEIGHT*2 - 0.1, width=5.45).move_to(0.175*DOWN + 1.15*LEFT)
-get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.8*DOWN + 0.95*LEFT)
+get_rectangle_while = lambda : Rectangle(height=LINE_HEIGHT, width=4.75).move_to(0.455*UP + 1.1*LEFT) 
+get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.525).move_to(0.05*UP + 0.05*LEFT)
+get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.375*DOWN + 0.08*RIGHT)
 
 
 """ANIMATION: Shows the code and draws a rectangle around the construction invocation"""
@@ -128,41 +126,20 @@ def show_code_grasp_focus_search(self):
     return code_img_2
 
 
-"""ANIMATION: Shows the code and draws a rectangle around the is_feasible snippet"""
-def show_code_grasp_focus_feasible(self):
-    rect = get_rectangle_whole_if_feasible()
-
-    # Show the code
-    img, huge_rect = show_code_grasp(self, rect)
-    self.wait()
-
-    # Remove the code and others
-    self.play(
-        FadeOut(huge_rect), 
-        FadeOut(img), 
-        FadeOut(rect)
-    )
-
-
 """ANIMATION: Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
 def explain_code_grasp(self):
     image, rect = show_code_grasp(self)
 
     rectangle_while = get_rectangle_while()
     rectangle_construct = get_rectangle_construct()
-    rectangle_whole_if_feasible = get_rectangle_whole_if_feasible()
     rectangle_local_search = get_rectangle_local_search()
 
     # Focus con construct
     self.play(Create(rectangle_construct))
     self.wait()
 
-    # Focus on repair
-    self.play(ReplacementTransform(rectangle_construct, rectangle_whole_if_feasible))
-    self.wait()
-
-    # Focur on local search
-    self.play(ReplacementTransform(rectangle_whole_if_feasible, rectangle_local_search))
+    # Focus on local search
+    self.play(ReplacementTransform(rectangle_construct, rectangle_local_search))
     self.wait()
 
     # Focus on loop
@@ -178,7 +155,7 @@ def explain_code_grasp(self):
 def show_code_grasp(self, additional_mobjects=[]):
     rect = get_huge_black_rectangle()
     DOWN_SHIFT = 0
-    image = ImageMobject("my_media//GRASP_code_snippet_v4.png").shift(DOWN_SHIFT * DOWN)
+    image = ImageMobject("my_media//GRASP_code_snippet_v5.png").shift(DOWN_SHIFT * DOWN)
 
     self.play(
         LaggedStart(
@@ -333,7 +310,6 @@ def explain_alpha(self, box):
         FadeIn(alpha_range))
     self.wait()
 
-
     get_text = lambda : Text(f"[{MIN_C:.2f}, {(MIN_C+alpha.get_value()*(MAX_C-MIN_C)):.2f}]").shift(5*LEFT+2.75*UP).scale(1/2)
     # The text showing the MIN and MAX values allowed within the range
     range_text = get_text()
@@ -353,7 +329,9 @@ def explain_alpha(self, box):
     # All the objects to be displayed
     objects = [range_text, alpha_text, dot, line]
     self.play(
-        *[FadeIn(o) for o in objects if o is not range_text],
+        FadeIn(alpha_text),
+        FadeIn(dot),
+        FadeIn(line),
         ReplacementTransform(raw_formula_text, range_text),
         *[
             FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR)
@@ -392,21 +370,21 @@ def explain_alpha(self, box):
 
     for i in DISTANCES.keys():
         problem["DOTS_mobject"][i].clear_updaters()
-    
+
     range_text.clear_updaters()
     alpha_text.clear_updaters()
     dot.clear_updaters()
 
-    # TODO: remove just to check where it fails
-    self.wait()
-
     # Restore view to match previous
     # FIXME: fix the animation
+    # objects = [, alpha_text, dot, line]
 
     self.play(
-        *[FadeOut(o) for o in objects],
+        FadeOut(range_text),
+        FadeOut(alpha_text),
+        FadeOut(dot),
+        FadeOut(line),
         FadeOut(box),
-        FadeOut(new_box),
         *[FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR) for i in DISTANCES.keys()],
     )
 
@@ -600,27 +578,12 @@ def show_introduction(self):
 def get_total_cost(order):
     res = 0
 
-    for i in range(len(order)):
-        if i+1 < len(order):
-            coord_start, coord_end = problem["DOTS_coord"][order[i]], problem["DOTS_coord"][order[i+1]]
-            prev = res
-            res += (abs(coord_start[0] - coord_end[0])**2 + abs(coord_start[1] - coord_end[1])**2)**(1/2)
-            assert res >= 0
-            assert res >= prev
-
-        else:
-            assert problem["DOTS_coord"][order[i]] == problem["DOTS_coord"][order[-1]]
-            # TODO: simplify using the formula in the assert below
-            assert i==len(order)-1  and  (i+1)%len(order) == 0
-
-            res += (
-                abs(problem["DOTS_coord"][order[i]][0] - problem["DOTS_coord"][order[0]][0])**2 + 
-                abs(problem["DOTS_coord"][order[i]][1] - problem["DOTS_coord"][order[0]][1])**2
-            )**(1/2)
-
-            assert res >= 0
-            assert res >= prev
-
+    for i in range(0, len(order)):
+        coord_start, coord_end = problem["DOTS_coord"][order[i]], problem["DOTS_coord"][order[(i+1)%len(order)]]
+        prev = res
+        res += (abs(coord_start[0] - coord_end[0])**2 + abs(coord_start[1] - coord_end[1])**2)**(1/2)
+        assert res >= 0
+        assert res >= prev
 
     return res
 
@@ -655,8 +618,6 @@ def do_local_search(self, code_img):
         *[FadeToColor(l, EXPLORING_LINE_COLOR) for l in problem["EDGES_tmp_mobject"]],
         FadeIn(original_cost_text)
     )
-
-    # TODO: explain what the neighborhood is
 
     self.wait()
 
@@ -738,10 +699,53 @@ def do_local_search(self, code_img):
                     FadeOut(new_cost_text),
                     run_time = 1 if slow_iterations >= 0 else 1/3
                 )
+    
+    for (i,edge) in enumerate(problem["EDGES_tmp_mobject"]):
+        edge.clear_updaters()
 
-    self.play(FadeOut(code_img))
     problem["DOTS_VISITED_search"].clear()
     problem["DOTS_VISITED_search"].extend(solution.copy())
+
+    self.play(
+        FadeOut(code_img),
+        *[FadeOut(e) for e in problem["EDGES_tmp_mobject"]]
+    )
+
+    self.wait()
+
+
+# TODO: implement
+"""ANIMATION: Displays graphs explainig how different values affect time and results"""
+def explain_parameter_values(self):
+    pass
+    # TODO: Show how parameters affect the found solution, exploration space, execution time
+    # TODO: pending: order-vs-value, alpha value, p value, first-vs-best
+    # TODO: Explain best choice of parameters
+
+
+# TODO: implement
+"""ANIMATION: Displays a list of extensions to the algorithm"""
+def show_extensions(self):
+    pass
+    # TODO: Show extensions and improvements to the algorithm
+    # TODO: repair and more
+
+
+"""ANIMATION: Displays the end of the video (member names and references)"""
+def show_final_credits(self):
+    # TODO: Add references
+
+
+    # Show member names
+    title_GRASP = Text("GRASP").shift(UP*2)
+    group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/3).shift(DOWN*3)
+
+    self.play(
+        FadeIn(title_GRASP),
+        FadeIn(group_name)
+    )
+
+    self.wait()
 
 
 """MAIN"""
@@ -767,26 +771,20 @@ class GRASP(Scene):
         code_img = show_code_grasp_focus_construct(self)
         # Visualize construction
         construct_initial_solution(self, code_img)
-
-        # Show the general code and focus on repair
-        show_code_grasp_focus_feasible(self)
-        # TODO: Show the idea behind repair
-        # TODO: explain reason behind it
-        # TODO: Visualize repair
-
-        # Show the general code and focus on local search
+        
+        # Show the general code and the code for local search
         code_img = show_code_grasp_focus_search(self)
         # Visualize local search
         do_local_search(self, code_img)
 
+        # Show the code to do a recap of the code
         explain_code_grasp(self)
 
-        # TODO: Show how parameters affect the found solution, exploration space, execution time
-        # TODO: pending: order-vs-value, alpha value, p value, first-vs-best
-        # TODO: Explain best choice of parameters
+        # Explain how different values of the parameters affect the run-time and results
+        explain_parameter_values(self)
 
-        # TODO: Show extensions and improvements to the algorithm
+        # Mention extensions and modifications of the algorithms
+        show_extensions(self)
 
-        # TODO: End of video
-        # TODO: Add references
-        # TODO: Show our names
+        # Show the final credits
+        show_final_credits(self)
