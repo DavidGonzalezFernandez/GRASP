@@ -119,7 +119,7 @@ def show_code_grasp_focus_search(self):
     self.play(
         FadeOut(huge_rect),
         FadeOut(rect_break),
-        code_img_2.animate.scale(1/2).shift(UP*2.1 + LEFT*4.9)
+        code_img_2.animate.scale(1/2).shift(UP*2.1 + LEFT*4.5)
     )
     self.wait()
 
@@ -708,27 +708,173 @@ def do_local_search(self, code_img):
 
     self.play(
         FadeOut(code_img),
-        *[FadeOut(e) for e in problem["EDGES_tmp_mobject"]]
+        *[FadeOut(e) for e in problem["EDGES_tmp_mobject"]],
+        *[FadeOut(e) for e in problem["EDGES_main_mobject"]],
+        *[FadeOut(d) for d in problem["DOTS_mobject"]],
+        FadeOut(original_cost_text)
     )
 
     self.wait()
 
 
-# TODO: implement
 """ANIMATION: Displays graphs explainig how different values affect time and results"""
 def explain_parameter_values(self):
-    pass
-    # TODO: Show how parameters affect the found solution, exploration space, execution time
-    # TODO: pending: order-vs-value, alpha value, p value, first-vs-best
-    # TODO: Explain best choice of parameters
+    # Exploration space
+    x_values = [i/20 for i in range(21)]
+
+    y_values = [
+        # Alpha, best-fit
+        [371.8, 383.0, 409.0, 435.4, 439.8, 445.8, 446.6, 450.6, 454.4, 460.4, 466.4, 469.4, 474.6, 479.8, 484.0, 491.0, 502.4, 502.4, 505.2, 508.6, 511.6],
+        # Alpha, first-fit
+        [712.626, 1051.872, 1314.65, 1520.61, 1629.814, 1676.84, 1711.762, 1709.992, 1799.788, 1843.382, 1908.316, 1943.17, 2050.55, 2132.592, 2180.584, 2278.868, 2477.104, 2581.67, 2669.234, 2751.74, 3060.692]
+    ]
+
+    for i in range(len(y_values)):
+        y_values[i] = [int(val) for val in y_values[i]]
+
+    axes = [
+        Axes(
+            x_range = [0, 1, 0.2] if i in [0,1] else [1, 20, 5],
+            y_range = [0, max(y_values[i]), max(y_values[i])/5],
+            tips = False,
+            axis_config={"include_numbers": True}
+        ).scale(2/5)
+        for i in range(len(y_values))
+    ]
+    grouped = Group(axes[0], axes[1]).arrange(buff=1.5)
+
+    titles_x = ["α", "α"]
+    titles_x_text = [Text(titles_x[i]).scale(1/4).next_to(axes[i], DOWN) for i in range(len(y_values))]
+
+    titles_y = ["Soluciones exploradas (best-fit)", "Soluciones exploradas (first-fit)"]
+    titles_y_text = [Text(titles_y[i]).scale(1/4).rotate(PI/2).next_to(axes[i], LEFT) for i in range(len(y_values))]
+
+    self.play(
+        *[Create(_) for _ in axes],
+        *[Create(_) for _ in titles_x_text],
+        *[Create(_) for _ in titles_y_text]
+    )
+    self.wait()
+
+    line_graphs = [
+        axes[i].plot_line_graph(
+            x_values = x_values,
+            y_values = y_values[i],
+            line_color = BLUE,
+        )
+        for i in range(len(axes))
+    ]
+    for lg in line_graphs:
+        for d in lg["vertex_dots"]:
+            d.scale(1/2)
+
+    self.play(
+        *[Write(lg) for lg in line_graphs]
+    )
+    self.wait()
 
 
-# TODO: implement
+    # Solutions:
+    x_values_2 = [i/20 for i in range(21)]
+    y_values_2 = [
+        # Alpha, best-fit
+        [168.50160670605305, 163.26524848571154, 194.15894563003008, 219.88741702470622, 248.1739025989809, 285.4741417437415, 307.86171870918713, 
+            351.17958326145214, 379.80450242623004, 399.41841895522623, 435.0087584123062, 461.0576212222607, 493.95605401910916, 515.9099984631524,
+            558.5912989648706, 576.6230421590552, 603.677171880414, 607.7345072066798, 618.0881152777688, 618.0847211788407, 626.3431772338979],
+
+        # Alpha, first-fit
+        [171.68526972647282, 164.1225090476803, 195.87778597798132, 223.01502162098285, 256.69499021396473, 294.9835824610303, 332.5157664341469, 
+            361.372418494939, 406.35542882465114, 439.9878253624741, 465.4852706730682, 486.6204279613743, 548.2805360738532, 552.9419029252903, 
+            611.8304607543159, 634.3108603333178, 657.2549865717139, 683.7567004674659, 683.9006495467665, 692.2257871348861, 690.1799257130817]
+    ]
+
+    for i in range(len(y_values)):
+        y_values[i] = [int(val) for val in y_values[i]]
+
+    axes_2 = [
+        Axes(
+            x_range = [0, 1, 0.2],
+            y_range = [0, 700, 100],
+            tips = False,
+            axis_config={"include_numbers": True}
+        ).scale(2/5)
+        for i in range(len(y_values_2))
+    ]
+    grouped = Group(axes_2[0], axes_2[1]).arrange(buff=1.5)
+
+    titles_x_2 = ["α", "α"]
+    titles_x_text_2 = [Text(titles_x_2[i]).scale(1/4).next_to(axes_2[i], DOWN) for i in range(len(y_values_2))]
+
+    titles_y_2 = ["Soluciones generadas (best-fit)", "Soluciones generadas (first-fit)"]
+    titles_y_text_2 = [Text(titles_y_2[i]).scale(1/4).rotate(PI/2).next_to(axes_2[i], LEFT) for i in range(len(y_values_2))]
+
+    line_graphs_2 = [
+        axes_2[i].plot_line_graph(
+            x_values = x_values_2,
+            y_values = y_values_2[i],
+            line_color = BLUE,
+        )
+        for i in range(len(y_values))
+    ]
+    for lg in line_graphs_2:
+        for d in lg["vertex_dots"]:
+            d.scale(1/2)
+
+    self.play(
+        *[ReplacementTransform(axes[i], axes_2[i]) for i in range(len(axes))],
+        *[ReplacementTransform(titles_x_text[i], titles_x_text_2[i]) for i in range(len(titles_x_text))],
+        *[ReplacementTransform(titles_y_text[i], titles_y_text_2[i]) for i in range(len(titles_y_text))],
+        *[ReplacementTransform(line_graphs[i], line_graphs_2[i]) for i in range(len(line_graphs))],
+        #*[FadeOut(lg) for lg in ]
+    )
+    self.wait()
+
+    
+
+
+    self.play(
+        *[FadeOut(_) for _ in axes_2],
+        *[FadeOut(_) for _ in titles_x_text_2],
+        *[FadeOut(_) for _ in titles_y_text_2],
+        *[FadeOut(_) for _ in line_graphs_2]
+    )
+    self.wait()
+
+
 """ANIMATION: Displays a list of extensions to the algorithm"""
-def show_extensions(self):
-    pass
-    # TODO: Show extensions and improvements to the algorithm
-    # TODO: repair and more
+def show_enhancements(self):
+    enhancement_list = {
+        "Construcción": Paragraph(
+            "• Random Plus Greedy Construction",
+            "• Sampled Greedy Construction",
+            "• Restricciones relajadas + Reparación",
+            "• Reactive GRASP",
+            "• Cost perturbations",
+            "• Memoria y aprendizaje"
+        ).scale(1/2),
+        "Path-relinking": None,
+        "Reinicio": None
+    }
+
+    prev = []
+
+    for (k,v) in enhancement_list.items():
+        current = [Text(k).shift(UP*1.5)]
+        if v is not None:
+            current.append(v.next_to(current[-1], DOWN))
+        
+        self.play(
+            LaggedStart(
+                *[FadeOut(_) for _ in prev],
+                *[FadeIn(_) for _ in current],
+                lag_ratio = 0.1
+            )
+        )
+        self.wait()
+
+        prev = current
+    
+    self.play(*[FadeOut(_) for _ in prev])
 
 
 """ANIMATION: Displays the end of the video (member names and references)"""
@@ -737,8 +883,8 @@ def show_final_credits(self):
 
 
     # Show member names
-    title_GRASP = Text("GRASP").shift(UP*2)
-    group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/3).shift(DOWN*3)
+    title_GRASP = Text("GRASP").shift(UP*1)
+    group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/3).shift(DOWN*2)
 
     self.play(
         FadeIn(title_GRASP),
@@ -784,7 +930,7 @@ class GRASP(Scene):
         explain_parameter_values(self)
 
         # Mention extensions and modifications of the algorithms
-        show_extensions(self)
+        show_enhancements(self)
 
         # Show the final credits
         show_final_credits(self)
