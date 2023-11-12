@@ -24,7 +24,7 @@ EXPLORING_LINE_COLOR = BLUE
 
 
 """CODE: Initializes the dict with all the info for the problem"""
-def build_problem(self):
+def initialize_problem():
     random.seed(2)
     N_POINTS = 20
     for _ in range(N_POINTS):
@@ -34,13 +34,13 @@ def build_problem(self):
 
 
 """ANIMATION: draws the problem on the screen"""
-def display_problem(self, title=None):
+def display_problem(grasp_scene, title=None):
     # Remove the title
     if title is not None:
-        self.play(FadeOut(title))
+        grasp_scene.play(FadeOut(title))
 
     # Create the Dots
-    self.play(
+    grasp_scene.play(
         LaggedStart(
             *[Create(d) for d in problem["DOTS_mobject"]],
             *[Create(e) for e in problem["EDGES_main_mobject"]],
@@ -49,7 +49,7 @@ def display_problem(self, title=None):
         )
     )
 
-    self.wait()
+    grasp_scene.wait()
 
 get_huge_black_rectangle = lambda : Rectangle(height=100, width=100, color=BLACK, fill_color=BLACK, fill_opacity=1)
 
@@ -60,104 +60,105 @@ get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).m
 
 
 """ANIMATION: Shows the code and draws a rectangle around the construction invocation"""
-def show_code_grasp_focus_construct(self):
+def show_code_grasp_focus_construct(grasp_scene):
     rect = get_rectangle_construct()
     code_img = ImageMobject("my_media//construction_code_snippet_v2.png")
 
     # Show the code
-    img, huge_rect = show_code_grasp(self, rect)
-    self.wait()
+    img, huge_rect = show_code_grasp(grasp_scene, rect)
+    grasp_scene.wait()
 
     # Show specific implementation for helper function
-    self.play(
+    grasp_scene.play(
         FadeOut(img), 
         FadeOut(rect), 
         FadeIn(code_img)
     )
-    self.wait()
+    grasp_scene.wait()
 
     # Scale and move the code
-    self.play(
+    grasp_scene.play(
         FadeOut(huge_rect),
         code_img.animate.become(ImageMobject("my_media//construction_code_snippet_v2.png").scale(1/2).shift(UP*2 + LEFT*5))
     )
-    self.wait()
+    grasp_scene.wait()
 
     return code_img
     
 
 """ANIMATION: Shows the code and draws a rectangle around the local search invocation"""
-def show_code_grasp_focus_search(self):
+def show_code_grasp_focus_search(grasp_scene):
 
     rect = get_rectangle_local_search()
     code_img = ImageMobject("my_media//search_code_snippet_v4.png")
     code_img_2 = ImageMobject("my_media//search_code_snippet_v5.png")
 
     # Show the code
-    img, huge_rect = show_code_grasp(self, rect)
-    self.wait()
+    img, huge_rect = show_code_grasp(grasp_scene, rect)
+    grasp_scene.wait()
 
     rect_break = Rectangle(height=0.45, width=1).shift(DOWN*1.425 + LEFT * 1.655)
 
     #Show specific implementation for helper function
-    self.play(
+    grasp_scene.play(
         FadeOut(img), 
         FadeOut(rect), 
         FadeIn(code_img)
     )
-    self.wait()
+    grasp_scene.wait()
 
     # Compare first vs best approach
-    self.play(
+    grasp_scene.play(
         FadeOut(code_img),
         FadeIn(code_img_2),
         Create(rect_break)
     )
-    self.wait()
+    grasp_scene.wait()
 
     # Scale and move the code
-    self.play(
+    grasp_scene.play(
         FadeOut(huge_rect),
         FadeOut(rect_break),
         code_img_2.animate.scale(1/2).shift(UP*2.1 + LEFT*4.5)
     )
-    self.wait()
+    grasp_scene.wait()
 
     return code_img_2
 
 
 """ANIMATION: Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
-def explain_code_grasp(self):
-    image, rect = show_code_grasp(self)
+def explain_code_grasp(grasp_scene):
+    # TODO change UPDATE BEST SOLUTION
+    image, rect = show_code_grasp(grasp_scene)
 
     rectangle_while = get_rectangle_while()
     rectangle_construct = get_rectangle_construct()
     rectangle_local_search = get_rectangle_local_search()
 
     # Focus con construct
-    self.play(Create(rectangle_construct))
-    self.wait()
+    grasp_scene.play(Create(rectangle_construct))
+    grasp_scene.wait()
 
     # Focus on local search
-    self.play(ReplacementTransform(rectangle_construct, rectangle_local_search))
-    self.wait()
+    grasp_scene.play(ReplacementTransform(rectangle_construct, rectangle_local_search))
+    grasp_scene.wait()
 
     # Focus on loop
-    self.play(ReplacementTransform(rectangle_local_search, rectangle_while))
-    self.wait()
+    grasp_scene.play(ReplacementTransform(rectangle_local_search, rectangle_while))
+    grasp_scene.wait()
 
     # Remove image and rectangle
-    self.play(FadeOut(image), FadeOut(rect), FadeOut(rectangle_while))
-    self.wait()
+    grasp_scene.play(FadeOut(image), FadeOut(rect), FadeOut(rectangle_while))
+    grasp_scene.wait()
 
 
 """ANIMATION: Shows the code for GRASP"""
-def show_code_grasp(self, additional_mobjects=[]):
+def show_code_grasp(grasp_scene, additional_mobjects=[]):
     rect = get_huge_black_rectangle()
     DOWN_SHIFT = 0
     image = ImageMobject("my_media//GRASP_code_snippet_v5.png").shift(DOWN_SHIFT * DOWN)
 
-    self.play(
+    grasp_scene.play(
         LaggedStart(
             Create(rect),
             FadeIn(image),
@@ -166,7 +167,7 @@ def show_code_grasp(self, additional_mobjects=[]):
         )
     )
 
-    self.wait()
+    grasp_scene.wait()
 
     # Return the image so it can removed afterwards
     return image, rect
@@ -174,7 +175,7 @@ def show_code_grasp(self, additional_mobjects=[]):
 
 """ANIMATION: Tries all p posible values to explain how its value affects the
 behaviour of the greedy-randomized approach"""
-def explain_p(self):
+def explain_p(grasp_scene):
     DISTANCES = get_distances()
     MIN_P, MAX_P = 1, len(DISTANCES.values())
     MIN_C, MAX_C = min(DISTANCES.values()), max(DISTANCES.values())
@@ -215,7 +216,7 @@ def explain_p(self):
     get_text = lambda : Text(f"{int(p.get_value())}").scale(1/3).next_to(line, RIGHT)
     text = get_text()
 
-    self.play(
+    grasp_scene.play(
         FadeIn(box),
         *[
             dist_text[distance].animate.move_to(ORIGINAL_POSITION + SHIFT_DOWN*i).scale(3/4)
@@ -223,12 +224,12 @@ def explain_p(self):
         ]
     )
 
-    self.wait()
+    grasp_scene.wait()
 
     the_dots_1 = [problem["DOTS_mobject"][i] for (i,dist) in DISTANCES.items() if sorted(DISTANCES.values()).index(dist)+1 > int(p.get_value())]
     the_dots_2 = [problem["DOTS_mobject"][i] for (i,dist) in DISTANCES.items() if sorted(DISTANCES.values()).index(dist)+1 <=  int(p.get_value())]
 
-    self.play(
+    grasp_scene.play(
         Create(line),
         Create(text),
         *[FadeToColor(d, DEFAULT_DOT_COLOR) for d in the_dots_1],
@@ -247,19 +248,19 @@ def explain_p(self):
     line.add_updater(line_updater)
     text.add_updater(lambda z: z.become(get_text()))
 
-    self.wait()
+    grasp_scene.wait()
 
     # To min
-    self.play(p.animate.set_value(MIN_P), run_time=2)
-    self.wait()
+    grasp_scene.play(p.animate.set_value(MIN_P), run_time=2)
+    grasp_scene.wait()
 
     # To max
-    self.play(p.animate.set_value(MAX_P), run_time=2)
-    self.wait()
+    grasp_scene.play(p.animate.set_value(MAX_P), run_time=2)
+    grasp_scene.wait()
 
     # To medium
-    self.play(p.animate.set_value(5), run_time=2)
-    self.wait()
+    grasp_scene.play(p.animate.set_value(5), run_time=2)
+    grasp_scene.wait()
 
     line.clear_updaters()
     text.clear_updaters()
@@ -268,7 +269,7 @@ def explain_p(self):
         problem["DOTS_mobject"][i].clear_updaters()
 
     # Return distantes to original position and DOTS to original color
-    self.play(
+    grasp_scene.play(
         *[distance.animate.next_to(dot, RIGHT).scale(4/3) for (dot,distance) in next_to_mobjects.items()],
         FadeOut(line),
         FadeOut(text),
@@ -279,18 +280,14 @@ def explain_p(self):
 
 
 """ANIMATION: Explains how to create the RCL"""
-def explain_restricted_candidate_list(self):
-    # Explain p
-    box = explain_p(self)
-    self.wait()
-
+def explain_restricted_candidate_list(grasp_scene):
     # Explain alpha
-    explain_alpha(self, box)
+    explain_alpha(grasp_scene)
 
 
 """ANIMATION: Tries all alpha posible p to explain how its value affects the
 behaviour of the greedy-randomized approach"""
-def explain_alpha(self, box):
+def explain_alpha(grasp_scene):
     MIN_ALPHA, MAX_ALPHA = 0, 1
     DISTANCES = get_distances()
     MIN_C, MAX_C = min(DISTANCES.values()), max(DISTANCES.values())
@@ -304,11 +301,11 @@ def explain_alpha(self, box):
     # Initial explanation for alpha
     raw_formula_text = Paragraph(r"[c_min ,", r"c_min + α*(c_max - c_min)]").shift(5*LEFT+2.75*UP).scale(2/5)
     alpha_range = Text(r"0 ≤ α ≤ 1").shift(5*LEFT+1.25*UP).scale(1/2)
-    self.play(
-        box.animate.become(new_box),
+    grasp_scene.play(
+        FadeIn(new_box),
         FadeIn(raw_formula_text),
         FadeIn(alpha_range))
-    self.wait()
+    grasp_scene.wait()
 
     get_text = lambda : Text(f"[{MIN_C:.2f}, {(MIN_C+alpha.get_value()*(MAX_C-MIN_C)):.2f}]").shift(5*LEFT+2.75*UP).scale(1/2)
     # The text showing the MIN and MAX values allowed within the range
@@ -328,7 +325,7 @@ def explain_alpha(self, box):
 
     # All the objects to be displayed
     objects = [range_text, alpha_text, dot, line]
-    self.play(
+    grasp_scene.play(
         FadeIn(alpha_text),
         FadeIn(dot),
         FadeIn(line),
@@ -341,7 +338,7 @@ def explain_alpha(self, box):
         FadeOut(alpha_range)
     )
 
-    self.wait()
+    grasp_scene.wait()
 
     for (i,d) in DISTANCES.items():
         # Update the colors of the points if they can be included in RCL
@@ -357,16 +354,16 @@ def explain_alpha(self, box):
     range_text.add_updater(lambda z: z.become(get_text()))
 
     # From center to MAX
-    self.play(alpha.animate.set_value(MAX_ALPHA), run_time=2)
-    self.wait()
+    grasp_scene.play(alpha.animate.set_value(MAX_ALPHA), run_time=2)
+    grasp_scene.wait()
 
     # From MAX to MIN
-    self.play(alpha.animate.set_value(MIN_ALPHA), run_time=2)
-    self.wait()
+    grasp_scene.play(alpha.animate.set_value(MIN_ALPHA), run_time=2)
+    grasp_scene.wait()
 
     # From MIN to center
-    self.play(alpha.animate.set_value(0.5), run_time=2)
-    self.wait()
+    grasp_scene.play(alpha.animate.set_value(0.5), run_time=2)
+    grasp_scene.wait()
 
     for i in DISTANCES.keys():
         problem["DOTS_mobject"][i].clear_updaters()
@@ -375,20 +372,16 @@ def explain_alpha(self, box):
     alpha_text.clear_updaters()
     dot.clear_updaters()
 
-    # Restore view to match previous
-    # FIXME: fix the animation
-    # objects = [, alpha_text, dot, line]
-
-    self.play(
+    grasp_scene.play(
         FadeOut(range_text),
         FadeOut(alpha_text),
         FadeOut(dot),
         FadeOut(line),
-        FadeOut(box),
+        FadeOut(new_box),
         *[FadeToColor(problem["DOTS_mobject"][i], color=SELECTED_DOT_COLOR) for i in DISTANCES.keys()],
     )
 
-    self.wait()
+    grasp_scene.wait()
 
 
 """CODE: Calculates the distance from the last visited point to all non-visited points"""
@@ -415,7 +408,7 @@ def get_restricted_candidate_list(distances, alpha):
 
 """ANIMATION & CODE: greedy-randomized construction of a solution.
 Shows the process and updates the dict"""
-def construct_initial_solution(self, img_code):
+def construct_initial_solution(grasp_scene, img_code):
     alpha = 0.2
 
     random.seed(1)
@@ -437,11 +430,11 @@ def construct_initial_solution(self, img_code):
     arrow = Arrow(start=pos_solution, end=pos_solution+RIGHT).scale(1/2).move_to(pos_solution)
 
     # Change color of the point
-    self.play(
+    grasp_scene.play(
         FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
         Create(arrow)
     )
-    self.wait()
+    grasp_scene.wait()
 
     NUM_STEP_BY_STEP = 2
 
@@ -449,14 +442,14 @@ def construct_initial_solution(self, img_code):
     while len(problem["DOTS_visited"]) != len(problem["DOTS_mobject"]):
         # Move arrow and color candidates
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
-            self.play(
+            grasp_scene.play(
                 arrow.animate.move_to(pos_get_cand_1 if len(problem["DOTS_visited"])==1 else pos_get_cand_2),
                 *[FadeToColor(p, SELECTED_DOT_COLOR) for (i,p) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"]]
             )
-            self.wait()
+            grasp_scene.wait()
         elif len(problem["DOTS_visited"]) == NUM_STEP_BY_STEP+1:
-            self.play(arrow.animate.move_to(pos_while))
-            self.wait()
+            grasp_scene.play(arrow.animate.move_to(pos_while))
+            grasp_scene.wait()
 
         last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
 
@@ -469,19 +462,19 @@ def construct_initial_solution(self, img_code):
                 if i not in problem["DOTS_visited"]
             ]
             problem["DISTANCES_mobjects"].extend(distances_text)
-            self.play(
+            grasp_scene.play(
                 arrow.animate.move_to(pos_costs),
                 *[FadeIn(t) for t in distances_text]
             )
-            self.wait()
+            grasp_scene.wait()
 
         if len(problem["DOTS_visited"]) == 1:
-            self.play(
+            grasp_scene.play(
                 arrow.animate.move_to(pos_RCL),
             )
-            self.wait()
+            grasp_scene.wait()
             # Pause to explain the RCL
-            explain_restricted_candidate_list(self)
+            explain_restricted_candidate_list(grasp_scene)
 
         # Filter out the worst ones
         restricted_candidate_list = get_restricted_candidate_list(distances, alpha)
@@ -490,13 +483,13 @@ def construct_initial_solution(self, img_code):
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
             the_dots_1 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i not in restricted_candidate_list.keys()]
             the_dots_2 = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i not in problem["DOTS_visited"] and i in restricted_candidate_list.keys()]
-            self.play(
+            grasp_scene.play(
                 *[FadeToColor(d, color=DEFAULT_DOT_COLOR) for d in the_dots_1],
                 *[FadeToColor(d, color=SELECTED_DOT_COLOR) for d in the_dots_2],
                 arrow.animate.move_to(pos_RCL),
                 *[FadeOut(t) for t in distances_text]
             )
-            self.wait()
+            grasp_scene.wait()
         
         problem["DISTANCES_mobjects"].clear()
 
@@ -504,26 +497,26 @@ def construct_initial_solution(self, img_code):
         index = random.choice(list(restricted_candidate_list.keys()))
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
             the_dots = [d for (i,d) in enumerate(problem["DOTS_mobject"]) if i in restricted_candidate_list.keys()]
-            self.play(
+            grasp_scene.play(
                 *[FadeToColor(d, color=DEFAULT_DOT_COLOR) for d in the_dots if d is not problem["DOTS_mobject"][index]],
                 arrow.animate.move_to(pos_random)
             )
-            self.wait()
+            grasp_scene.wait()
 
         # Animations for visiting
         new_x, new_y = problem["DOTS_coord"][index]
         line = Line([last_x, last_y, 0], [new_x, new_y, 0], color=MAIN_LINE_COLOR)
         if len(problem["DOTS_visited"]) <= NUM_STEP_BY_STEP:
-            self.play(
+            grasp_scene.play(
                 FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
                 FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
                 Create(line),
                 arrow.animate.move_to(pos_append),
                 run_time = 1
             )
-            self.wait()
+            grasp_scene.wait()
         else:
-            self.play(
+            grasp_scene.play(
                 FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
                 FadeToColor(problem["DOTS_mobject"][index], color=VISITING_DOT_COLOR),
                 Create(line),
@@ -537,41 +530,41 @@ def construct_initial_solution(self, img_code):
     last_x, last_y = problem["DOTS_coord"][ problem["DOTS_visited"][-1] ]
     new_x, new_y = problem["DOTS_coord"][ problem["DOTS_visited"][0] ]
     line = Line([last_x, last_y, 0], [new_x, new_y, 0], color=MAIN_LINE_COLOR)
-    self.play(
+    grasp_scene.play(
         FadeToColor(problem["DOTS_mobject"][problem["DOTS_visited"][-1]], color=VISITED_DOT_COLOR),
         Create(line),
         arrow.animate.move_to(pos_return)
     )
     problem["EDGES_main_mobject"].append(line)
 
-    self.wait()
+    grasp_scene.wait()
 
     # Remove code
-    self.play(FadeOut(arrow), FadeOut(img_code))
-    self.wait()
+    grasp_scene.play(FadeOut(arrow), FadeOut(img_code))
+    grasp_scene.wait()
 
 
 """ANIMATION: Shows the title to do the introduction"""
-def show_introduction(self):
+def show_introduction(grasp_scene):
     group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/5).shift(DOWN*3)
 
     title_whole_name = Paragraph("Greedy", "Randomized", "Adaptive", "Search", "Procedure").shift(UP*0.5)
-    self.add(title_whole_name, group_name)
-    self.wait()
+    grasp_scene.add(title_whole_name, group_name)
+    grasp_scene.wait()
 
     title_GRASP = Text("GRASP").shift(UP*2)
 
     details_text = Paragraph("• Multicomienzo", "\n• Optimización combinatoria").scale(2/3)
 
-    self.play(
+    grasp_scene.play(
         ReplacementTransform(title_whole_name, title_GRASP),
         FadeOut(group_name),
         FadeIn(details_text)
     )
-    self.wait()
+    grasp_scene.wait()
 
-    self.play(FadeOut(title_GRASP), FadeOut(details_text))
-    self.wait()
+    grasp_scene.play(FadeOut(title_GRASP), FadeOut(details_text))
+    grasp_scene.wait()
 
 
 """CODE: Returns the total cost given an order of visited nodes"""
@@ -589,15 +582,15 @@ def get_total_cost(order):
 
 
 """ANIMATION: Displays the title of the problem"""
-def introduce_problem(self):
+def introduce_problem(grasp_scene):
     title = Text("Problema del viajante")
-    self.play(Create(title))
+    grasp_scene.play(Create(title))
     return title
 
 
 """ANIMATION & CODE: performs the local search given the current solution in the dict.
 Used first-fit approach. Shows the process and updates the dict"""
-def do_local_search(self, code_img):
+def do_local_search(grasp_scene, code_img):
     is_optimal = False
     
     solution = problem["DOTS_visited"].copy()
@@ -608,18 +601,18 @@ def do_local_search(self, code_img):
         new_edge = Line(edge.start, edge.end, color=MAIN_LINE_COLOR, z_index=1)
         problem["EDGES_tmp_mobject"].append(new_edge)
     
-    self.add(*problem["EDGES_tmp_mobject"])
+    grasp_scene.add(*problem["EDGES_tmp_mobject"])
 
     original_cost_text = Text(f"{solution_cost:.2f}", color=VISITED_DOT_COLOR).scale(1/2).shift(DOWN * 3 + RIGHT * 5)
     new_cost_text = Text("¿?", color=EXPLORING_LINE_COLOR).scale(1/2).shift(DOWN * 3.5 + RIGHT * 5)
 
     # Color the edges
-    self.play(
+    grasp_scene.play(
         *[FadeToColor(l, EXPLORING_LINE_COLOR) for l in problem["EDGES_tmp_mobject"]],
         FadeIn(original_cost_text)
     )
 
-    self.wait()
+    grasp_scene.wait()
 
     assert len(problem["DOTS_visited"]) == len(problem["EDGES_tmp_mobject"])
     for (i,edge) in enumerate(problem["EDGES_tmp_mobject"]):
@@ -639,7 +632,7 @@ def do_local_search(self, code_img):
     while not is_optimal:
         n_neighborhood += 1
         if n_neighborhood > 1:
-            self.play(
+            grasp_scene.play(
                 # Move the main after having found better solution
                 *[line.animate.become(
                     Line(
@@ -669,7 +662,7 @@ def do_local_search(self, code_img):
             if n_neighborhood==1 or (new_cost < solution_cost):
                 new_cost_text = Text(f"{new_cost:.2f}", color=EXPLORING_LINE_COLOR).scale(1/2).next_to(original_cost_text, ORIGINAL_NEW_SHIFT)
                 # Do the permutation
-                self.play(
+                grasp_scene.play(
                     problem["DOTS_mobject"][problem["DOTS_visited"][i]].
                         animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
                     problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
@@ -679,7 +672,7 @@ def do_local_search(self, code_img):
                 )
 
                 if slow_iterations >= 0:
-                    self.wait()
+                    grasp_scene.wait()
 
                 # Compare solutions
                 if new_cost < solution_cost:
@@ -687,11 +680,11 @@ def do_local_search(self, code_img):
                     solution, solution_cost = new_solution.copy(), new_cost
                     is_optimal = False
                     if n_neighborhood==1:
-                        self.wait()
+                        grasp_scene.wait()
                     break
 
                 # Return animation to prev state: move edges to original position
-                self.play(
+                grasp_scene.play(
                     problem["DOTS_mobject"][problem["DOTS_visited"][i]].
                         animate.move_to(problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].get_center()),
                     problem["DOTS_mobject"][problem["DOTS_visited"][(i+1)%len(problem["DOTS_mobject"])]].
@@ -706,7 +699,7 @@ def do_local_search(self, code_img):
     problem["DOTS_VISITED_search"].clear()
     problem["DOTS_VISITED_search"].extend(solution.copy())
 
-    self.play(
+    grasp_scene.play(
         FadeOut(code_img),
         *[FadeOut(e) for e in problem["EDGES_tmp_mobject"]],
         *[FadeOut(e) for e in problem["EDGES_main_mobject"]],
@@ -714,11 +707,11 @@ def do_local_search(self, code_img):
         FadeOut(original_cost_text)
     )
 
-    self.wait()
+    grasp_scene.wait()
 
 
 """ANIMATION: Displays graphs explainig how different values affect time and results"""
-def explain_parameter_values(self):
+def explain_parameter_values(grasp_scene):
     # Exploration space
     x_values = [i/20 for i in range(21)]
 
@@ -749,12 +742,12 @@ def explain_parameter_values(self):
     titles_y = ["Soluciones exploradas (best-fit)", "Soluciones exploradas (first-fit)"]
     titles_y_text = [Text(titles_y[i]).scale(1/4).rotate(PI/2).next_to(axes[i], LEFT) for i in range(len(y_values))]
 
-    self.play(
+    grasp_scene.play(
         *[Create(_) for _ in axes],
         *[Create(_) for _ in titles_x_text],
         *[Create(_) for _ in titles_y_text]
     )
-    self.wait()
+    grasp_scene.wait()
 
     line_graphs = [
         axes[i].plot_line_graph(
@@ -768,10 +761,10 @@ def explain_parameter_values(self):
         for d in lg["vertex_dots"]:
             d.scale(1/2)
 
-    self.play(
+    grasp_scene.play(
         *[Write(lg) for lg in line_graphs]
     )
-    self.wait()
+    grasp_scene.wait()
 
 
     # Solutions:
@@ -820,29 +813,29 @@ def explain_parameter_values(self):
         for d in lg["vertex_dots"]:
             d.scale(1/2)
 
-    self.play(
+    grasp_scene.play(
         *[ReplacementTransform(axes[i], axes_2[i]) for i in range(len(axes))],
         *[ReplacementTransform(titles_x_text[i], titles_x_text_2[i]) for i in range(len(titles_x_text))],
         *[ReplacementTransform(titles_y_text[i], titles_y_text_2[i]) for i in range(len(titles_y_text))],
         *[ReplacementTransform(line_graphs[i], line_graphs_2[i]) for i in range(len(line_graphs))],
         #*[FadeOut(lg) for lg in ]
     )
-    self.wait()
+    grasp_scene.wait()
 
     
 
 
-    self.play(
+    grasp_scene.play(
         *[FadeOut(_) for _ in axes_2],
         *[FadeOut(_) for _ in titles_x_text_2],
         *[FadeOut(_) for _ in titles_y_text_2],
         *[FadeOut(_) for _ in line_graphs_2]
     )
-    self.wait()
+    grasp_scene.wait()
 
 
 """ANIMATION: Displays a list of extensions to the algorithm"""
-def show_enhancements(self):
+def show_enhancements(grasp_scene):
     enhancement_list = {
         "Construcción": Paragraph(
             "• Random Plus Greedy Construction",
@@ -863,22 +856,22 @@ def show_enhancements(self):
         if v is not None:
             current.append(v.next_to(current[-1], DOWN))
         
-        self.play(
+        grasp_scene.play(
             LaggedStart(
                 *[FadeOut(_) for _ in prev],
                 *[FadeIn(_) for _ in current],
                 lag_ratio = 0.1
             )
         )
-        self.wait()
+        grasp_scene.wait()
 
         prev = current
     
-    self.play(*[FadeOut(_) for _ in prev])
+    grasp_scene.play(*[FadeOut(_) for _ in prev])
 
 
 """ANIMATION: Displays the end of the video (member names and references)"""
-def show_final_credits(self):
+def show_final_credits(grasp_scene):
     # TODO: Add references
 
 
@@ -886,12 +879,12 @@ def show_final_credits(self):
     title_GRASP = Text("GRASP").shift(UP*1)
     group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/3).shift(DOWN*2)
 
-    self.play(
+    grasp_scene.play(
         FadeIn(title_GRASP),
         FadeIn(group_name)
     )
 
-    self.wait()
+    grasp_scene.wait()
 
 
 """MAIN"""
@@ -906,7 +899,7 @@ class GRASP(Scene):
         self.wait()
 
         # Introduce the problem to solve
-        build_problem(self)
+        initialize_problem()
         title = introduce_problem(self)
         self.wait()
         # Draw the built problem on the screen
