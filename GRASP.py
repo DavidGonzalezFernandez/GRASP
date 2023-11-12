@@ -54,9 +54,9 @@ def display_problem(grasp_scene, title=None):
 get_huge_black_rectangle = lambda : Rectangle(height=100, width=100, color=BLACK, fill_color=BLACK, fill_opacity=1)
 
 LINE_HEIGHT = 0.5
-get_rectangle_while = lambda : Rectangle(height=LINE_HEIGHT, width=4.75).move_to(0.455*UP + 1.1*LEFT) 
-get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.525).move_to(0.05*UP + 0.05*LEFT)
-get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.375*DOWN + 0.08*RIGHT)
+get_rectangle_while = lambda : Rectangle(height=LINE_HEIGHT, width=4.75).move_to(0.88*UP + 0.875*LEFT)
+get_rectangle_construct = lambda : Rectangle(height=LINE_HEIGHT, width=5.55).move_to(0.465*UP + 0.225*RIGHT)
+get_rectangle_local_search = lambda : Rectangle(height=LINE_HEIGHT, width=5.8).move_to(0.025*UP + 0.35*RIGHT)
 
 
 """ANIMATION: Shows the code and draws a rectangle around the construction invocation"""
@@ -156,7 +156,7 @@ def explain_code_grasp(grasp_scene):
 def show_code_grasp(grasp_scene, additional_mobjects=[]):
     rect = get_huge_black_rectangle()
     DOWN_SHIFT = 0
-    image = ImageMobject("my_media//GRASP_code_snippet_v5.png").shift(DOWN_SHIFT * DOWN)
+    image = ImageMobject("my_media//GRASP_code_snippet_v7.png").shift(DOWN_SHIFT * DOWN)
 
     grasp_scene.play(
         LaggedStart(
@@ -717,9 +717,11 @@ def explain_parameter_values(grasp_scene):
 
     y_values = [
         # Alpha, best-fit
-        [371.8, 383.0, 409.0, 435.4, 439.8, 445.8, 446.6, 450.6, 454.4, 460.4, 466.4, 469.4, 474.6, 479.8, 484.0, 491.0, 502.4, 502.4, 505.2, 508.6, 511.6],
+        [371.8, 383.0, 409.0, 435.4, 439.8, 445.8, 446.6, 450.6, 454.4, 460.4, 466.4, 469.4, 474.6, 479.8, 
+        484.0, 491.0, 502.4, 502.4, 505.2, 508.6, 511.6],
         # Alpha, first-fit
-        [712.626, 1051.872, 1314.65, 1520.61, 1629.814, 1676.84, 1711.762, 1709.992, 1799.788, 1843.382, 1908.316, 1943.17, 2050.55, 2132.592, 2180.584, 2278.868, 2477.104, 2581.67, 2669.234, 2751.74, 3060.692]
+        [712.626, 1051.872, 1314.65, 1520.61, 1629.814, 1676.84, 1711.762, 1709.992, 1799.788, 1843.382, 
+        1908.316, 1943.17, 2050.55, 2132.592, 2180.584, 2278.868, 2477.104, 2581.67, 2669.234, 2751.74, 3060.692]
     ]
 
     for i in range(len(y_values)):
@@ -737,10 +739,10 @@ def explain_parameter_values(grasp_scene):
     grouped = Group(axes[0], axes[1]).arrange(buff=1.5)
 
     titles_x = ["α", "α"]
-    titles_x_text = [Text(titles_x[i]).scale(1/4).next_to(axes[i], DOWN) for i in range(len(y_values))]
+    titles_x_text = [Text(titles_x[i]).scale(1/4).next_to(axes[i], DOWN) for i in range(len(axes))]
 
     titles_y = ["Soluciones exploradas (best-fit)", "Soluciones exploradas (first-fit)"]
-    titles_y_text = [Text(titles_y[i]).scale(1/4).rotate(PI/2).next_to(axes[i], LEFT) for i in range(len(y_values))]
+    titles_y_text = [Text(titles_y[i]).scale(1/4).rotate(PI/2).next_to(axes[i], LEFT) for i in range(len(axes))]
 
     grasp_scene.play(
         *[Create(_) for _ in axes],
@@ -759,7 +761,7 @@ def explain_parameter_values(grasp_scene):
     ]
     for lg in line_graphs:
         for d in lg["vertex_dots"]:
-            d.scale(1/2)
+            d.scale(0.4)
 
     grasp_scene.play(
         *[Write(lg) for lg in line_graphs]
@@ -767,22 +769,103 @@ def explain_parameter_values(grasp_scene):
     grasp_scene.wait()
 
 
-    # Solutions:
+    # Generated solutions
+    x_values_3 = [i/20 for i in range(21)]
+    y_values_3 = (
+        # Alpha, min
+        [175.30569440774562, 174.0577569441483, 209.1008958216621, 242.80537872674472, 296.22807910365066, 321.7270226686758,
+        382.0762991315628, 418.75724849643, 463.2379460837739, 508.1351723986504, 560.914373587751, 574.9902551530935, 638.3334415766027,
+        696.6702634411356, 702.5198689178217, 746.8927613710514, 821.7654263315491, 860.4991836545292, 862.7556022198372, 
+        881.3866671044277, 903.1364299865438],
+        # Alpha, avg
+        [195.34661636635283, 215.92857993239903, 256.5670654132471, 305.9072814443351, 351.90764298836405, 392.62653833712557,
+        443.2977043728582, 496.59624978262383, 551.8646667940421, 599.7569450615863, 647.1722965808575, 700.0633381329967, 
+        748.4159993250053, 796.9061834648643, 846.4791104092621, 890.6299962842689, 932.3577893235419, 971.4950199088457, 
+        1000.5633759197782, 1018.0601792453892, 1060.6032962146608],
+        # Alpha, max
+        [211.76310410253666, 252.02238146122815, 295.7042571754477, 346.7170363587187, 405.45556684380233, 459.4358524246897, 
+        508.8764851122736, 570.8243938550233, 631.1469532311878, 677.4364034889157, 745.0211731938122, 812.7248849608063, 
+        849.0806195502898, 920.9711017735721, 941.8674399288584, 992.6543706495888, 1082.4735378585679, 1087.9253063491976, 
+        1134.2458929972856, 1162.3089731438708, 1187.041034650837]
+    )
+
+    axes_3 = [
+        Axes(
+            x_range = [0, 1, 0.2],
+            y_range = [0, 1200, 200],
+            tips = False,
+            axis_config={"include_numbers": True}
+        ).scale(3/5)
+    ]
+
+    titles_x_3 = ["α"]
+    titles_x_text_3 = [Text(titles_x_3[i]).scale(1/3).next_to(axes_3[i], DOWN) for i in range(len(axes_3))]
+    
+    titles_y_3 = ["Solución construída"]
+    titles_y_text_3 = [Text(titles_y_3[i]).scale(1/3).rotate(PI/2).next_to(axes_3[i], LEFT) for i in range(len(axes_3))]
+    
+    line_graphs_3 = [
+        axes_3[i % len(axes_3)].plot_line_graph(
+            x_values = x_values_3,
+            y_values = y_values_3[i],
+            line_color = [BLUE, WHITE, RED][i],
+        )
+        for i in range(len(y_values_3))
+    ]
+
+    for lg in line_graphs_3:
+        for d in lg["vertex_dots"]:
+            d.scale(0.4)
+        
+    grasp_scene.play(
+        ReplacementTransform(axes[0], axes_3[0]),
+        *[FadeOut(a) for a in axes[1:]],
+        ReplacementTransform(titles_x_text[0], titles_x_text_3[0]),
+        *[FadeOut(t) for t in titles_x_text[1:]],
+        ReplacementTransform(titles_y_text[0], titles_y_text_3[0]),
+        *[FadeOut(t) for t in titles_y_text[1:]],
+        ReplacementTransform(line_graphs[0], line_graphs_3[0]),
+        *[FadeOut(t) for t in line_graphs[1:]],
+    )
+    grasp_scene.play(
+        *[Write(lg) for lg in line_graphs_3[1:]]
+    )
+    grasp_scene.wait()
+
+
+    # Found solutions:
     x_values_2 = [i/20 for i in range(21)]
     y_values_2 = [
-        # Alpha, best-fit
+        # Alpha, best-fit, min
         [168.50160670605305, 163.26524848571154, 194.15894563003008, 219.88741702470622, 248.1739025989809, 285.4741417437415, 307.86171870918713, 
             351.17958326145214, 379.80450242623004, 399.41841895522623, 435.0087584123062, 461.0576212222607, 493.95605401910916, 515.9099984631524,
             558.5912989648706, 576.6230421590552, 603.677171880414, 607.7345072066798, 618.0881152777688, 618.0847211788407, 626.3431772338979],
 
-        # Alpha, first-fit
+        # Alpha, first-fit, min
         [171.68526972647282, 164.1225090476803, 195.87778597798132, 223.01502162098285, 256.69499021396473, 294.9835824610303, 332.5157664341469, 
             361.372418494939, 406.35542882465114, 439.9878253624741, 465.4852706730682, 486.6204279613743, 548.2805360738532, 552.9419029252903, 
-            611.8304607543159, 634.3108603333178, 657.2549865717139, 683.7567004674659, 683.9006495467665, 692.2257871348861, 690.1799257130817]
-    ]
+            611.8304607543159, 634.3108603333178, 657.2549865717139, 683.7567004674659, 683.9006495467665, 692.2257871348861, 690.1799257130817],
 
-    for i in range(len(y_values)):
-        y_values[i] = [int(val) for val in y_values[i]]
+        # Alpha, best-fit, avg
+        [191.03831482729024, 201.90595040251395, 232.45576149342793, 269.8107671423632, 304.2448891058208, 336.61880015442364, 377.5955063630883,
+        420.11360297666164, 460.48951382578986, 495.16884310407397, 528.079809510834, 566.3344607014195, 595.7586250096194, 625.1856655276769, 
+        655.6145999185944, 679.9303946489774, 695.87813216888, 711.3558314441881, 721.8307968816777, 724.4600270545632, 731.6981218340487],
+
+        # # Alpha, first-fit, avg
+        [192.35364322811432, 204.89346866468478, 237.31876655164774, 277.5540055718985, 314.2710783030643, 349.26040759210986, 392.110108316167,
+        438.2874357179185, 483.29498118825416, 522.5480495909779, 559.1361919428352, 602.2798880089982, 637.468255381899, 671.3298750151749,
+        708.1799995109075, 738.0906914711593, 758.241273285356, 779.1796480620826, 792.7237461559469, 801.8649560815043, 815.2798775386423],
+
+        # Alpha, best-fit, max
+        [207.9313823810573, 234.39121903382764, 277.07871510664904, 310.35812121626094, 353.1156583584607, 402.2239294985039, 445.16275370808086,
+        502.9754039866448, 535.5284994162733, 574.3016494627213, 611.8742419279469, 688.8107920739916, 699.4613332567577, 730.262222414041, 762.736261772604,
+        791.709765078189, 828.6464208752834, 830.9670576658217, 828.552677044864, 844.0708993175447, 847.6969642525652],
+
+        ## Alpha, first-fit, max
+        [208.78466555476865, 241.27253976944158, 280.5219994505575, 317.590404971618, 362.1589938367566, 410.27502974417234, 461.70754853019383,
+        516.3311576962503, 570.3774795362199, 604.0603308679256, 646.0479986157301, 729.5769744770848, 734.0473696975118, 775.5373342262163, 814.101013228809,
+         863.3451146941735, 859.2233154138246, 872.6852054760211, 887.465495059633, 926.1314430097838, 913.8945015649533]
+    ]
 
     axes_2 = [
         Axes(
@@ -791,39 +874,42 @@ def explain_parameter_values(grasp_scene):
             tips = False,
             axis_config={"include_numbers": True}
         ).scale(2/5)
-        for i in range(len(y_values_2))
+        for i in range(2)
     ]
     grouped = Group(axes_2[0], axes_2[1]).arrange(buff=1.5)
 
     titles_x_2 = ["α", "α"]
-    titles_x_text_2 = [Text(titles_x_2[i]).scale(1/4).next_to(axes_2[i], DOWN) for i in range(len(y_values_2))]
+    titles_x_text_2 = [Text(titles_x_2[i]).scale(1/4).next_to(axes_2[i], DOWN) for i in range(len(axes_2))]
 
     titles_y_2 = ["Soluciones generadas (best-fit)", "Soluciones generadas (first-fit)"]
-    titles_y_text_2 = [Text(titles_y_2[i]).scale(1/4).rotate(PI/2).next_to(axes_2[i], LEFT) for i in range(len(y_values_2))]
+    titles_y_text_2 = [Text(titles_y_2[i]).scale(1/4).rotate(PI/2).next_to(axes_2[i], LEFT) for i in range(len(axes_2))]
 
     line_graphs_2 = [
-        axes_2[i].plot_line_graph(
+        axes_2[i % len(axes_2)].plot_line_graph(
             x_values = x_values_2,
             y_values = y_values_2[i],
-            line_color = BLUE,
+            line_color = [BLUE, WHITE, RED][i//len(axes_2)],
         )
-        for i in range(len(y_values))
+        for i in range(len(y_values_2))
     ]
     for lg in line_graphs_2:
         for d in lg["vertex_dots"]:
-            d.scale(1/2)
+            d.scale(0.4)
 
     grasp_scene.play(
-        *[ReplacementTransform(axes[i], axes_2[i]) for i in range(len(axes))],
-        *[ReplacementTransform(titles_x_text[i], titles_x_text_2[i]) for i in range(len(titles_x_text))],
-        *[ReplacementTransform(titles_y_text[i], titles_y_text_2[i]) for i in range(len(titles_y_text))],
-        *[ReplacementTransform(line_graphs[i], line_graphs_2[i]) for i in range(len(line_graphs))],
-        #*[FadeOut(lg) for lg in ]
+        ReplacementTransform(axes_3[0], axes_2[0]),
+        *[Create(a) for a in axes_2[1:]],
+
+        ReplacementTransform(titles_x_text_3[0], titles_x_text_2[0]),
+        *[Create(a) for a in titles_x_text_2[1:]],
+
+        ReplacementTransform(titles_y_text_3[0], titles_y_text_2[0]),
+        *[Create(a) for a in titles_y_text_2[1:]],
+
+        *[ReplacementTransform(line_graphs_3[i], line_graphs_2[i*len(axes_2)]) for i in range(len(line_graphs_3))],
+        *[Write(line_graphs_2[i]) for i in range(1, len(line_graphs_2), 2)],
     )
     grasp_scene.wait()
-
-    
-
 
     grasp_scene.play(
         *[FadeOut(_) for _ in axes_2],
@@ -837,53 +923,70 @@ def explain_parameter_values(grasp_scene):
 """ANIMATION: Displays a list of extensions to the algorithm"""
 def show_enhancements(grasp_scene):
     enhancement_list = {
-        "Construcción": Paragraph(
-            "• Random Plus Greedy Construction",
+        "Construcción":
+            ["• Random Plus Greedy Construction",
             "• Sampled Greedy Construction",
             "• Restricciones relajadas + Reparación",
             "• Reactive GRASP",
             "• Cost perturbations",
-            "• Memoria y aprendizaje"
-        ).scale(1/2),
-        "Path-relinking": None,
-        "Reinicio": None
+            "• Memoria y aprendizaje"],
+        "Path-relinking": None
     }
 
-    prev = []
-
+    to_add = []
     for (k,v) in enhancement_list.items():
-        current = [Text(k).shift(UP*1.5)]
-        if v is not None:
-            current.append(v.next_to(current[-1], DOWN))
-        
-        grasp_scene.play(
-            LaggedStart(
-                *[FadeOut(_) for _ in prev],
-                *[FadeIn(_) for _ in current],
-                lag_ratio = 0.1
-            )
-        )
-        grasp_scene.wait()
+        if len(to_add) == 0:
+            to_add.append(Text(k).shift(UP*2))
+        else:
+            to_add.append(Text(k).next_to(to_add[-1], DOWN).shift(DOWN * 0.75))
 
-        prev = current
-    
-    grasp_scene.play(*[FadeOut(_) for _ in prev])
+        if v is not None:
+            to_add.append(Paragraph(*v).scale(1/2).next_to(to_add[-1], DOWN))
+
+
+    grasp_scene.play(*[FadeIn(_) for _ in to_add])
+    grasp_scene.wait()
+    grasp_scene.play(*[FadeOut(_) for _ in to_add])
+    grasp_scene.wait()
 
 
 """ANIMATION: Displays the end of the video (member names and references)"""
 def show_final_credits(grasp_scene):
-    # TODO: Add references
+    # Show references
+    references_str = [
+        r"[1]	‘The noising method: a new method for combinatorial optimization’, Operations Research Letters, vol. 14, no. 3, pp. 133–137, 1993.",
+        r"[2]	A. R. Duarte, C. C. Ribeiro, and S. Urrutia, ‘A Hybrid ILS Heuristic to the Referee Assignment Problem with an Embedded MIP Strategy’, Hybrid Metaheuristics. Springer Berlin Heidelberg, pp. 82–95, 2007.",
+        r"[3]	‘A probabilistic heuristic for a computationally difficult set covering problem’, Operations Research Letters, vol. 8, no. 2, pp. 67–71, 1989.",
+        r"[4]	‘Improved Constructive Multistart Strategies for the Quadratic Assignment Problem Using Adaptive Memory’, INFORMS Journal on Computing, vol. 11, pp. 198–204, 05 1999.",
+        r"[5]	‘Expanding Neighborhood GRASP for the Traveling Salesman Problem’, Computational Optimization and Applications, vol. 32, pp. 231–257, 12 2005.",
+        r"[6]	‘GRASP with path-relinking for the generalized quadratic assignment problem’, Journal of Heuristics, 2011.",
+        r"[7]	‘A greedy randomized adaptive search procedure application to solve the travelling salesman problem’, International Journal of Industrial Engineering and Management, vol. 10, pp. 238–242, 09 2019.",
+        r"[8]	‘Semi-greedy heuristics: An empirical study’, Operations Research Letters, vol. 6, no. 3, pp. 107–114, 1987.",
+        r"[9]	‘Reactive GRASP: An Application to a Matrix Decomposition Problem in TDMA Traffic Assignment’, INFORMS Journal on Computing, 2000.",
+        r"[10]	‘Greedy Randomized Adaptive Search Procedures’, in Handbook of Metaheuristics, Springer US, 2003, pp. 219–249.",
+        r"[11]	‘A Hybrid Heuristic for the p-Median Problem’, Journal of Heuristics, 2004."
+    ]
 
+    group = VGroup(*[Text(t).scale(1/3) for t in references_str])
+    group.arrange(DOWN, center=False, aligned_edge=LEFT, buff=0.2)
+    group.move_to(ORIGIN)
+
+    grasp_scene.play(FadeIn(group))
+    grasp_scene.wait()
+    grasp_scene.play(FadeOut(group))
+    grasp_scene.wait()
 
     # Show member names
     title_GRASP = Text("GRASP").shift(UP*1)
     group_name = Paragraph("Grupo 1", "\tDavid González Fernández", "\tSergio Arroni del Riego", "\tJosé Manuel Lamas Pérez").scale(2/3).shift(DOWN*2)
 
     grasp_scene.play(
-        FadeIn(title_GRASP),
-        FadeIn(group_name)
+        LaggedStart(
+            Write(title_GRASP),
+            Write(group_name),
+            lag_ratio = 0.25
+        )
     )
-
     grasp_scene.wait()
 
 
