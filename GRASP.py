@@ -128,7 +128,6 @@ def show_code_grasp_focus_search(grasp_scene):
 
 """ANIMATION: Given the shown GRASP code it uses rectangles to focus on specific parts of the code"""
 def explain_code_grasp(grasp_scene):
-    # TODO change UPDATE BEST SOLUTION
     image, rect = show_code_grasp(grasp_scene)
 
     rectangle_while = get_rectangle_while()
@@ -335,6 +334,11 @@ def explain_alpha(grasp_scene):
             for i in DISTANCES.keys()
             if (DISTANCES[i] <= (MIN_C+alpha.get_value()*(MAX_C-MIN_C)))
         ],
+        *[
+            FadeToColor(problem["DOTS_mobject"][i], color=DEFAULT_DOT_COLOR)
+            for i in DISTANCES.keys()
+            if (DISTANCES[i] > (MIN_C+alpha.get_value()*(MAX_C-MIN_C)))
+        ],
         FadeOut(alpha_range)
     )
 
@@ -362,7 +366,7 @@ def explain_alpha(grasp_scene):
     grasp_scene.wait()
 
     # From MIN to center
-    grasp_scene.play(alpha.animate.set_value(0.5), run_time=2)
+    grasp_scene.play(alpha.animate.set_value(0.2), run_time=2)
     grasp_scene.wait()
 
     for i in DISTANCES.keys():
@@ -953,6 +957,7 @@ def show_enhancements(grasp_scene):
 """ANIMATION: Displays the end of the video (member names and references)"""
 def show_final_credits(grasp_scene):
     # Show references
+
     references_str = [
         r"[1]	‘The noising method: a new method for combinatorial optimization’, Operations Research Letters, vol. 14, no. 3, pp. 133–137, 1993.",
         r"[2]	A. R. Duarte, C. C. Ribeiro, and S. Urrutia, ‘A Hybrid ILS Heuristic to the Referee Assignment Problem with an Embedded MIP Strategy’, Hybrid Metaheuristics. Springer Berlin Heidelberg, pp. 82–95, 2007.",
@@ -971,6 +976,7 @@ def show_final_credits(grasp_scene):
     group.arrange(DOWN, center=False, aligned_edge=LEFT, buff=0.2)
     group.move_to(ORIGIN)
 
+    # FIXME: the text is outside of screen
     grasp_scene.play(FadeIn(group))
     grasp_scene.wait()
     grasp_scene.play(FadeOut(group))
@@ -990,7 +996,21 @@ def show_final_credits(grasp_scene):
     grasp_scene.wait()
 
 
-"""MAIN"""
+"""Enhancements"""
+class TheEnd(Scene):
+    def construct(self):
+        # Explain how different values of the parameters affect the run-time and results
+        explain_parameter_values(self)
+        
+        # Mention extensions and modifications of the algorithms
+        show_enhancements(self)
+
+        # Show the final credits
+        show_final_credits(self)
+
+
+
+"""GRASP animation"""
 class GRASP(Scene):
     def construct(self):
         # Show the name and meaning
@@ -1022,11 +1042,3 @@ class GRASP(Scene):
         # Show the code to do a recap of the code
         explain_code_grasp(self)
 
-        # Explain how different values of the parameters affect the run-time and results
-        explain_parameter_values(self)
-
-        # Mention extensions and modifications of the algorithms
-        show_enhancements(self)
-
-        # Show the final credits
-        show_final_credits(self)
